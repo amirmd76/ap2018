@@ -1,14 +1,14 @@
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Cat extends Animal {
+public class Cat extends Animal implements UpgradeableObject {
     Pair<Long, Long> goal = null;
-    public Cat(int ID, String type, long x, long y, int speed) {
-        super(ID, x, y, speed, type,0);
+    public Cat(int ID, long x, long y, int speed) {
+        super(ID, x, y, speed, "Cat",0);
     }
 
     private void move(GameMap map) {
-        setDirection(new Pair<Long, Long>(0L, 0L));
+        setDirection(new Pair<>(0L, 0L));
         if(goal.equals(getLocation()))
             goal = null;
         Graph graph = new Graph(map);
@@ -50,8 +50,15 @@ public class Cat extends Animal {
     public ArrayList<Product> collect(GameMap map) {
         MapCell cell = map.getCell(getLocation());
         ArrayList<Product> items = cell.getProducts();
-        cell.clearProducts(); // TODO: make sure this statement affects the map
+        cell.clearProducts();
         move(map);
         return items;
+    }
+
+    public String upgrade(){
+        if(level >= 2)
+            return "Cat is fully upgraded";
+        ++ level;
+        return String.format("%s%d has upgraded to level %d", type, id, level);
     }
 }

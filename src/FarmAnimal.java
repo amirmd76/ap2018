@@ -21,11 +21,11 @@ public class FarmAnimal extends Animal {
         if(time - lastTimeAte > Constants.MAX_TIME_WITHOUT_GRASS_TO_PRODUCE)
             return null;
         switch (getType()) {
-            case "chicken":
+            case "Turkey":
                 return "egg";
-            case "cow":
+            case "Cow":
                 return "milk";
-            case "sheep":
+            case "Sheep":
                 return "wool";
             default:
                 return "INVALID TYPE";

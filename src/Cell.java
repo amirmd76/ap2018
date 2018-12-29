@@ -26,6 +26,8 @@ public class Cell implements MapCell {
         products.clear();
     }
 
+    public void clearAnimals() { animals.clear(); }
+
     public ArrayList<Animal> getAnimals() {
         return animals;
     }
@@ -74,6 +76,19 @@ public class Cell implements MapCell {
             return null;
         Product res = products.get(idx);
         products.remove(idx);
+        return res;
+    }
+
+    Product getProduct(String type) {
+        int idx = -1;
+        for(int i = 0; i < products.size(); ++ i)
+            if(products.get(i).getType().equals(type)) {
+                idx = i;
+                break;
+            }
+        if(idx == -1)
+            return null;
+        Product res = products.get(idx);
         return res;
     }
 }

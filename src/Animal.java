@@ -1,12 +1,12 @@
 public class Animal {
 
-    private Pair<Long, Long> location, direction;        // Location on the map [x,y]
-    private int speed;            //Speed of walking depends on type of animal
-    private int level;
-    private String type;
-    private boolean alive;       // To check if yhe animal is dead or not
-    private int id;             // ID is for finding this specific animal
-    private int SUF;            // Speed Upgrade Factor
+    protected Pair<Long, Long> location, direction;        // Location on the map [x,y]
+    protected int speed;            //Speed of walking depends on type of animal
+    protected int level;
+    protected String type;
+    protected boolean alive;       // To check if yhe animal is dead or not
+    protected int id;             // ID is for finding this specific animal
+    protected int SUF;            // Speed Upgrade Factor
                                 //TODO handle SUf for each animal in constants
 
     public Animal(int ID, long x, long y, int speed, String type, int SUF) {
@@ -40,10 +40,16 @@ public class Animal {
         this.direction = direction;
     }
 
+    public void setLocation(Pair<Long, Long> location) {
+        this.location = location;
+    }
+
     public String walk(long time){          // direction is  a vector [dx,dy]
+        if(time == 0)
+            return "";
         location.x += direction.x * speed * time;        // Applying changes to x
         location.y += direction.y * speed * time;        // Applying changes to y
-        return String.format("%s%d is now in the location of %d,%d", type, id, location.x, location.y);
+        return String.format("%s%d is now in the location of %d,%d\n", type, id, location.x, location.y);
     }
 
     public String die(){
@@ -51,10 +57,7 @@ public class Animal {
         return String.format("%s%d is dead!", type, id);
     }
 
-    public String upgrade(){                    //TODO Check if this method should be abstract or not
-        ++level;
-        speed += SUF;
-        return String.format("%s%d has upgraded to level %d", type, id, level);
+    public void setLevel(int level) {
+        this.level = level;
     }
-
 }

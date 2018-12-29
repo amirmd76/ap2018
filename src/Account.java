@@ -8,7 +8,12 @@ public class Account {
     public Account() {money = 0;}
     public Account(long money) {this.money = money;}
 
-    public void spend(ArrayList<Pair<String, String>> actions, boolean apply) throws NotFoundException, NotEnoughMoneyException {
+    public long getMoney() {
+        return money;
+    }
+
+    public String spend(ArrayList<Pair<String, String>> actions, boolean apply) throws NotFoundException, NotEnoughMoneyException {
+        StringBuilder res = new StringBuilder();
         long currentMoney = money;
         for(Pair<String, String> action: actions) {
             if (!costs.containsKey(action))
@@ -17,17 +22,33 @@ public class Account {
             if (cost > currentMoney)
                 throw new NotEnoughMoneyException("Not enough money to spend");
             currentMoney -= cost;
+            if(apply)
+                res.append(String.format("Spent %d on %s %s", cost, action.x, action.y));
         }
         if(apply)
             money = currentMoney;
+        return res.toString();
     }
 
-    public void spend(String name, String type, boolean apply) throws NotFoundException, NotEnoughMoneyException {
+    public String spend(String name, String type, boolean apply) throws NotFoundException, NotEnoughMoneyException {
         Pair<String, String> key = new Pair<>(name, type);
         ArrayList<Pair<String, String>> actions = new ArrayList<>();
         actions.add(key);
-        spend(actions, apply);
+        return spend(actions, apply);
     }
+
+    public String spend(String name, long cost, boolean apply) throws NotEnoughMoneyException {
+        long currentMoney = money;
+        if (cost > currentMoney)
+            throw new NotEnoughMoneyException("Not enough money to spend");
+        currentMoney -= cost;
+        if(apply)
+            money = currentMoney;
+        if(apply)
+            return String.format("Spent %d on %s", cost, name);
+        return "";
+    }
+
     public boolean checkBuyItem(String type) {
         try {
             spend(type, "buy", false);
