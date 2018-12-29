@@ -51,7 +51,7 @@ public class Animal {
         return String.format("%s%d is dead!", type, id);
     }
 
-    public String upgrade(){                    //TODO Check if this method should be abstract or not
+    public String upgrade(){                    //TODO Check if this method should be abstract or not or just be in cat and dog class
         ++level;
         speed += SUF;
         return String.format("%s%d has upgraded to level %d", type, id, level);

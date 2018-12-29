@@ -3,7 +3,7 @@ public class Well {
     private int level;
 
     public Well() {
-        this.capacity = Constants.Well_Initial_Water_Capacity;
+        this.capacity = Constants.Well_Water_Capacity[0];
         this.storedWater = capacity;
         this.level = 1;
     }
@@ -23,7 +23,7 @@ public class Well {
             }
             else {
                 storedWater--;
-                return String.format("Water is ok for planting");
+                return String.format("Water is now provided for planting");
             }
         }
         catch (Exception e){
@@ -38,7 +38,7 @@ public class Well {
             }
             else {
                 level ++;
-                capacity += Constants.WAREHOUSE_UPGRADE_CAPACITY;
+                capacity = Constants.Well_Water_Capacity[level-1];
                 storedWater = capacity;
                 return String.format("Well is now upgraded to level %d", level);
             }

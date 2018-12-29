@@ -9,4 +9,6 @@ public class Dog extends Animal {
         this.die();
         return String.format("Both %s%d and %s%d are dead now", this.getType(), this.getId(), wild.getType(), wild.getId());
     }
+
+
 }

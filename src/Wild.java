@@ -1,10 +1,17 @@
 public class Wild extends Animal {
 
     private boolean prisoned;         //For stating that this wild animal is in the prisoned or not
+    private final int size;
+    private final int price;
 
     public Wild(int ID, String type, long x, long y, int speed, int SUF) {
         super(ID, x, y, speed, type, SUF);
         prisoned = false;
+        switch (this.getType()) {
+            case "lion": { this.size = 20; this.price = 150; break;}
+            case "bear": { this.size = 20; this.price = 100; break;}
+            default: {this.size = 0; this.price = 0;}
+        }
     }
 
     public boolean isPrisoned() { return prisoned; }

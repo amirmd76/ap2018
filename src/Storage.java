@@ -3,7 +3,7 @@ import java.util.ArrayList;
 class StorageItem {
     String type;
     long count;
-    StorageItem(String type, long count) {
+    StorageItem(String type, long count) {                  //TODO make this class compatible with product class
         this.type = type;
         this.count = count;
     }
@@ -69,13 +69,5 @@ public class Storage {
                 items.remove(idx);
             return "ok";
         }
-    }
-
-    public String remove(String type, long count){           //TODO handle removing stored products
-        return null;                                         //TODO handle exception of removing items more than they are stored
-    }
-
-    public String sell(String type, long count){                        //TODO handle selling stored products
-        return null;                                                    //TODO handle exception of selling items more than they are stored
     }
 }
