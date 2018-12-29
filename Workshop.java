@@ -19,9 +19,17 @@ public class Workshop {
         this.ID = ID;
     }
 
+    public Workshop(String type, int ID) {
+        this.type = type;
+        this.inputType = Constants.WORKSHOP_INPUT_TYPES.get(type);
+        this.returnType = Constants.WORKSHOP_RETURN_TYPES.get(type);
+        this.level = 1;
+        this.ID = ID;
+    }
+
     public Pair<ArrayList<Product>, String> produce(Storage storage){        // produce a product with the max count of level!
         int inputCount = inputType.length, returnCount = level;
-        int[] count = null, location = {0,0};
+        int[] count = null;
         ArrayList<Product> items = new ArrayList<>();
         for (int i = 0; i < inputCount; i++) {
             count [i] = 0;
@@ -44,7 +52,7 @@ public class Workshop {
                 storage.store(inputType[i], count[i] - returnCount, inputTypeSizes[i]);
         }
         for (int i = 0; i < returnCount; i++)
-            items.add(new Product(location, returnType));
+            items.add(new Product(0 , 0, returnType));
 
         return new Pair<>(items,String.format("%s%d workshop has produced %d %s", this.type,this.ID, returnCount, this.returnType));
     }
