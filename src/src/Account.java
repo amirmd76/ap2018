@@ -16,6 +16,10 @@ public class Account {
         return obj;
     }
 
+    public String print() {
+        return String.format("You have %d units of money", money);
+    }
+
     public Account(JSONObject data) {
         money = data.getLong("money");
     }

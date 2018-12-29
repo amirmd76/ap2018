@@ -24,6 +24,10 @@ public class Well implements UpgradeableObject {
         level = object.getInt("level");
     }
 
+    public String print() {
+        return String.format("Well(level %d) has capacity %d, and %d units water stored", level, capacity, storedWater);
+    }
+
     public long getStoredWater() { return storedWater; }
 
     public int reFillCost() {

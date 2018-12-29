@@ -26,6 +26,15 @@ public class Workshop implements UpgradeableObject {
         this.level = 1;
     }
 
+    public String print() {
+        StringBuilder ans = new StringBuilder();
+        ans.append(String.format("Workshop of type %s (id = %d, level = %d), input = ", type, ID, level));
+        for(int i = 0; i < inputType.length; ++ i)
+            ans.append(String.format("%d of %s, ", inputTypeSizes[i], inputType[i]));
+        ans.append(String.format("and produces %s\n", returnType));
+        return ans.toString();
+    }
+
     public JSONObject dump() {
         JSONObject object = new JSONObject();
         object.put("type", type);

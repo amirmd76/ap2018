@@ -13,6 +13,16 @@ public class Cell implements MapCell {
         grass = 0;
     }
 
+    public String print(int x, int y) {
+        StringBuilder ans = new StringBuilder(String.format("X cell (%d, %d) contains %d units of grass in it, %d products and %d animals: ", x, y,
+                grass, products.size(), animals.size()));
+        for(Animal animal: animals)
+            ans.append(String.format("%s (id = %d), ", animal.getType(), animal.getId()));
+        for(Product product: products)
+            ans.append(String.format("product of type %s, ", product.getType()));
+        return ans.substring(0, ans.length()-2) + "\n";
+    }
+
     public JSONObject dump() {
         JSONObject object = new JSONObject();
         JSONArray products = new JSONArray();
@@ -50,6 +60,7 @@ public class Cell implements MapCell {
         for(Object product: products)
             this.products.add(new Product((JSONObject)product));
     }
+
 
 
     public void addProduct(Product product) {

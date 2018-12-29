@@ -34,6 +34,12 @@ public class Storage implements UpgradeableObject {
     private int level = 1;
     private ArrayList<StorageItem> items;
 
+    public String print() {
+        StringBuilder ans = new StringBuilder(String.format("Warehouse (level %d) has capacity %d and contains %d items:\n", level, capacity, items.size()));
+        for(StorageItem item: items)
+            ans.append(String.format("*** %d of %s\n", item.count, item.size));
+        return ans.toString();
+    }
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();

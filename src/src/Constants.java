@@ -1,11 +1,13 @@
 import java.util.HashMap;
 
 public class Constants {
-    public final static long MAX_TIME_WITHOUT_GRASS_FOR_FARM_ANIMALS = 10;
+    public final static long MAX_TIME_WITHOUT_GRASS_FOR_FARM_ANIMALS = 40;
+    public final static int EAT_TIME = 20;
     final static long MAX_TIME_WITHOUT_GRASS_TO_PRODUCE = 10;
 
     final static long WAREHOUSE_INITIAL_CAPACITY = 50;
     final static long[] WAREHOUSE_UPGRADE_CAPACITY = {50, 150, 300, 600};
+    final static String DUMP_FILE = "farm_frenzy_ap.json";
 
     final static long[] Well_Water_Capacity = {5, 7, 10, 100};
     final static int Well_Max_Level_Upgrade = 4;

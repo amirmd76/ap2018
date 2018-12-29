@@ -1,3 +1,7 @@
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -6,14 +10,57 @@ public class Game {
     ArrayList<String> levels = new ArrayList<>();
     long time = 0;
     int currentPlayer = 0;
+    Event event = new Event();
+
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.put("time", time);
+        object.put("levels", levels.toArray());
+        JSONArray array = new JSONArray();
+        for(Controller controller: controllers)
+            array.put(controller.dump());
+        object.put("controllers", array);
+        object.put("currentPlayer", currentPlayer);
+        return object;
+    }
+
+    public void load(JSONObject object) {
+        time = object.getInt("time");
+        currentPlayer = object.getInt("currentPlayer");
+        JSONArray array = object.getJSONArray("levels");
+        for(int i = 0; i < array.length(); ++ i)
+            levels.add(array.getString(i));
+        array = object.getJSONArray("controllers");
+        for(int i = 0; i < array.length(); ++ i)
+            controllers.add(new Controller(array.getJSONObject(i), event));
+    }
 
     public void addLevel(String level) {
         levels.add(level);
     }
 
-    public void load(String json) {}
-    public String save(){
-        return "";
+    public void loadGame() throws Exception {
+        File file = new File(Constants.DUMP_FILE);
+        FileInputStream fis = new FileInputStream(file);
+        byte[] data = new byte[(int) file.length()];
+        fis.read(data);
+        fis.close();
+        String str = new String(data, "UTF-8");
+        JSONObject obj = new JSONObject(str);
+        load(obj);
+    }
+    public void saveGame() throws  Exception{
+        File file = new File(Constants.DUMP_FILE);
+        file.createNewFile();
+        FileWriter writer = new FileWriter(file);
+        JSONObject obj = dump();
+        obj.write(writer);
+        writer.flush();
+        writer.close();
+    }
+
+    public Game() {
+        controllers.add(new Controller(event, "guest"));
     }
 
     public void main(String[] args) {
@@ -22,27 +69,77 @@ public class Game {
             String command = sc.nextLine();
             String[] words = command.split(" ");
             StringBuilder cmd = new StringBuilder();
-            for(int i = 0; i < words.length; i ++)
+            for(int i = 1; i < words.length; i ++)
                 cmd.append(words[i]).append(" ");
             Controller controller = controllers.get(currentPlayer);
             String x = words[0];
-            if(x.equals("buy"))
-                controller.add(cmd.toString());
-            if(x.equals("pickup"))
-                controller.pickup(cmd.toString());
-            if(x.equals("cage"))
-                controller.cage(cmd.toString());
-            if(x.equals("plant"))
-                controller.plant(cmd.toString());
-            if(x.equals("well"))
-                controller.well(cmd.toString());
-            if(x.equals("upgrade"))
-                controller.upgrade(cmd.toString());
-            if(x.equals("start"))
-                controller.produce(cmd.toString());
-            if(x.equals("print")); //info/map/levels/warehouse/well/workshop/truck/helicopter
-            if(x.equals("turn"))
-                controller.turn(cmd.toString());
+            switch (x) {
+                case "buy":
+                    controller.add(cmd.toString());
+                    break;
+                case "pickup":
+                    controller.pickup(cmd.toString());
+                    break;
+                case "cage":
+                    controller.cage(cmd.toString());
+                    break;
+                case "plant":
+                    controller.plant(cmd.toString());
+                    break;
+                case "well":
+                    controller.well(cmd.toString());
+                    break;
+                case "upgrade":
+                    controller.upgrade(cmd.toString());
+                    break;
+                case "start":
+                    controller.produce(cmd.toString());
+                    break;
+                case "print":
+                    // TODO: handle levels
+                    event.printStatus(controller.print(cmd.toString()));
+                    break;
+                case "turn":
+                    controller.turn(cmd.toString());
+                    break;
+                case "save":
+                    try {
+                        saveGame();
+                        event.printStatus(String.format("Game saved to %s", Constants.DUMP_FILE));
+                    }
+                    catch (Exception e) {
+                        event.printStatus(e.getMessage());
+                    }
+                    break;
+                case "load":
+                    try {
+                        loadGame();
+                        event.printStatus("Game loaded successfully");
+                    }
+                    catch (Exception e) {
+                        event.printStatus(e.getMessage());
+                    }
+                case "add_player":
+                    String playerName = words[1];
+                    controllers.add(new Controller(event, playerName));
+                    currentPlayer = controllers.size() - 1;
+                    event.printStatus("Player " + playerName + " created");
+                    break;
+                case "switch_player":
+                    playerName = words[1];
+                    boolean flag = false;
+                    for(int i = 0; i < controllers.size(); ++ i)
+                        if(controllers.get(i).player.getName().equals(playerName)) {
+                            currentPlayer = i;
+                            flag = true;
+                            break;
+                        }
+                    if(!flag)
+                        event.printStatus("Player not found");
+                    else
+                        event.printStatus("Switched to player " + playerName);
+                    break;
+            }
         }
     }
 }

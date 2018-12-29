@@ -28,6 +28,14 @@ class Box {
         this.items_Count =0;
     }
 
+    public String print() {
+        StringBuilder ans = new StringBuilder(String.format("[] Box with capacity %d, has %d space, and has %d products in it. The products are:\n",
+                capacity, left_Capacity, products.size()));
+        for(Product product: products)
+            ans.append(String.format("*** Product %s with size %d\n", product.getType(), product.getSize()));
+        return ans.toString();
+    }
+
     public JSONObject dump() {
         JSONObject object = new JSONObject();
         object.put("capacity", capacity);
@@ -73,7 +81,7 @@ class Box {
 }
 
 public class Transportation implements UpgradeableObject {
-    private final String type;
+    private String type;
     private long box_Count_Capacity;
     private ArrayList<Box> boxes = new ArrayList<>();
     private int level, travel_Duration;
@@ -81,12 +89,12 @@ public class Transportation implements UpgradeableObject {
     public Transportation(String type) {
         this.type = type;
         switch (this.type) {
-            case "truck" : {
+            case "Truck" : {
                 this.box_Count_Capacity = Constants.Truck_Initial_Box_Capacity;
                 this.travel_Duration = Constants.Truck_Initial_Travel_Duration;
                 break;
             }
-            case "helicopter" : {
+            case "Helicopter" : {
                 this.box_Count_Capacity = Constants.Helicopter_Initial_Box_Capacity;
                 this.travel_Duration = Constants.Helicopter_Initial_Travel_Duration;
                 break;
@@ -95,9 +103,36 @@ public class Transportation implements UpgradeableObject {
         level = 1;
     }
 
+    public String print() {
+        StringBuilder ans = new StringBuilder();
+        ans.append(String.format("%s (level %d) has capacity for %d boxes, travel duration is %d and the boxes are: \n",
+                type, level, box_Count_Capacity, travel_Duration));
+        for(Box box: boxes)
+            ans.append(box.print());
+        return ans.toString();
+    }
+
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.
+        object.put("type", type);
+        object.put("boxCountCapacity", box_Count_Capacity);
+        object.put("level", level);
+        object.put("travelDuration", travel_Duration);
+        JSONArray array = new JSONArray();
+        for(Box box: boxes)
+            array.put(box.dump());
+        object.put("boxes", array);
+        return object;
+    }
+
+    public Transportation(JSONObject object) {
+        type = object.getString("type");
+        box_Count_Capacity = object.getLong("boxCountCapacity");
+        level = object.getInt("level");
+        travel_Duration = object.getInt("travelDuration");
+        JSONArray array = object.getJSONArray("boxes");
+        for(Object item: array)
+            boxes.add(new Box((JSONObject)item));
     }
 
     public String getType() { return type; }
