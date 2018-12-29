@@ -1,5 +1,7 @@
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
-import java.util.PrimitiveIterator;
 
 class FullException extends Exception {
     public FullException(String message) {
@@ -14,9 +16,9 @@ class Type_Mismatch extends Exception {
 }
 
 class Box {
-    private final int capacity = 20;
+    private int capacity = 20;
     private int left_Capacity;
-    private final String type;
+    private String type;
     private ArrayList<Product> products = new ArrayList<>();
     private int items_Count;
 
@@ -26,13 +28,36 @@ class Box {
         this.items_Count =0;
     }
 
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.put("capacity", capacity);
+        object.put("leftCapacity", left_Capacity);
+        object.put("type", type);
+        object.put("itemsCount", items_Count);
+        JSONArray array = new JSONArray();
+        for(Product product: products)
+            array.put(product.dump());
+        object.put("products", array);
+        return object;
+    }
+
+    public Box(JSONObject object) {
+        capacity = object.getInt(("capacity"));
+        left_Capacity = object.getInt("leftCapacity");
+        type = object.getString("type");
+        items_Count = object.getInt("itemsCount");
+        JSONArray array = object.getJSONArray("products");
+        for(Object obj: array)
+            products.add(new Product((JSONObject)obj));
+    }
+
     public ArrayList<Product> getProducts() { return products; }
 
-    public int getItems_Count() { return items_Count; }
+    public int getItemsCount() { return items_Count; }
 
     public String getType() { return type; }
 
-    public int add_To_Box(Product item) throws Exception{
+    public int addToBox(Product item) throws Exception{
         if (!(item.getType().equals(type))){
             throw new Type_Mismatch("Items type do not match");
         }
@@ -47,7 +72,7 @@ class Box {
     }
 }
 
-public class Transportation {
+public class Transportation implements UpgradeableObject {
     private final String type;
     private long box_Count_Capacity;
     private ArrayList<Box> boxes = new ArrayList<>();
@@ -70,29 +95,46 @@ public class Transportation {
         level = 1;
     }
 
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.
+    }
+
     public String getType() { return type; }
 
-    public int getTravel_Duration() { return travel_Duration; }
+    public int getTravelDuration() { return travel_Duration; }
 
     public String sell(Storage storage, String type, ArrayList<Product> items){                //TODO Handle money in account
+        if(items.isEmpty())
+            return "Truck is empty";
+        ArrayList<Product> storedItems = new ArrayList<>();
         int count = 0, i;                                                              //Selling products of one type
         i = getBox(type);
         if (i >= box_Count_Capacity)
             return ("Truck is full");
         String str;
-        str = storage.store(type, -1 * items.size());                  //TODO make Storage class compatible with Product class
+        str = storage.store(type, -items.size(), items.get(0).getSize());                  //TODO make Storage class compatible with Product class
         if (str.equals("ok"))
-            storage.store(type, items.size());
+            storage.store(type, items.size(), items.get(0).getSize());
         else
             return String.format("There is not enough %s in the storage!", type);
         try {                                                //For selling many types this method should be called for individual type of products
             for (Product items2 : items){
-                boxes.get(i).add_To_Box(items2);
+                boxes.get(i).addToBox(items2);
+                storedItems.add(items2);
                 count++;
             }
         }        //Command would be: sell product_Type1 Count1, sell product_Type2 Count2... at the end selling will be done by command "sell" with no argument
         catch (FullException e){
             if (count == 0){
+                if(count < items.size()) {
+                    ArrayList<Product> notStoredItems = new ArrayList<>();
+                    for(Product product: items) {
+                        if(!storedItems.contains(product))
+                            notStoredItems.add(product);
+                    }
+                    sell(storage, type, notStoredItems);
+                }
                 return e.toString();
             }
         }
@@ -104,28 +146,33 @@ public class Transportation {
         }
     }
 
-    public String complete_Selling(Storage storage){
-        String str = "";
+    public String completeSelling(Storage storage, Account account){
+        StringBuilder str = new StringBuilder();
         for (Box box: boxes){
-            storage.store(box.getType(), -1 * box.getItems_Count());
-            str += String.format("%d of %s have been sold /n", box.getItems_Count(), box.getType());
+            storage.store(box.getType(), -box.getItemsCount(), 0);
+            for(int i = 0; i < box.getItemsCount(); i ++)
+                try {
+                    account.spend("sell", box.getType(), true);
+                }
+                catch (Exception ignore){}
+            str.append(String.format("%d of %s have been sold /n", box.getItemsCount(), box.getType()));
         }
-        remove_Boxes_at_The_End_of_Work();
-        return str;
+        removeBoxesAtTheEndOfWork();
+        return str.toString();
     }
 
-    public String buy(Storage storage, String type, long count){                 //TODO Handle money in account
+    public String buy(String type, long count){                 //TODO Handle money in account
         int i = 0, counter = 0;                                                              //Selling products of one type
         ArrayList<Product> items = new ArrayList<>();
         i = getBox(type);
         if (i >= box_Count_Capacity)
             return ("Helicopter is full");
         for (int j = 0; j < count; j++){
-            items.add(new Product(new int[]{0, 0},type));
+            items.add(new Product(new Pair<>(0L, 0L),type));
         }       //Command would be: buy product_Type1 Count1, buy product_Type2 Count2... at the end selling will be done by command "buy" with no argument
         try{
             for (Product items2 : items){
-                boxes.get(i).add_To_Box(items2);
+                boxes.get(i).addToBox(items2);
                 counter++;
             }
         }
@@ -133,6 +180,8 @@ public class Transportation {
             if (counter == 0){
                 return e.toString();
             }
+            else if(count < items.size())
+                buy(type, count - counter);
         }
         catch (Exception e){
             return e.toString();
@@ -142,17 +191,23 @@ public class Transportation {
         }
     }
 
-    public String complete_Buying(Storage storage){
-        String str = "";
+    public Pair<ArrayList<Product>, String> completeBuying(){
+        StringBuilder str = new StringBuilder();
+        ArrayList<Product> products = new ArrayList<>();
         for (Box box : boxes){
-            storage.store(box.getType(), box.getItems_Count());
-            str += String.format("%d %s have been bought /n", box.getItems_Count(), box.getType());
+            String type = box.getType();
+            int count = box.getItemsCount();
+            str.append(String.format("%d %s have been bought \n", box.getItemsCount(), box.getType()));
+            while(count -- > 0) {
+                Product product = new Product(null, type);
+                products.add(product);
+            }
         }
-        remove_Boxes_at_The_End_of_Work();
-        return str;
+        removeBoxesAtTheEndOfWork();
+        return new Pair<>(products, str.toString());
     }
 
-    public String upgrade() throws Exception{
+    public String upgrade(){
         switch (type){
             case "truck": {
                 try {
@@ -189,7 +244,7 @@ public class Transportation {
         }
     }
 
-    public void remove_Boxes_at_The_End_of_Work(){   //This method should be called at the end of selling and buying commands to delete boxes from vehicles
+    public void removeBoxesAtTheEndOfWork(){   //This method should be called at the end of selling and buying commands to delete boxes from vehicles
         boxes.clear();
     }
 
@@ -205,5 +260,10 @@ public class Transportation {
             }
         }
         return i;
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
     }
 }

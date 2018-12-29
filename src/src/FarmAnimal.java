@@ -1,13 +1,26 @@
+import org.json.JSONObject;
+
 public class FarmAnimal extends Animal {
+
     long lastTimeAte = -1;
-    public FarmAnimal(String type, long x, long y) {
-        super(type, x, y);
+
+    public FarmAnimal(int ID, String type, long x, long y, int speed) { super(ID, x, y , speed, type,0); }
+
+    public JSONObject dump() {
+        JSONObject object = super.dump();
+        object.put("lastTimeAte", lastTimeAte);
+        return object;
+    }
+
+    public FarmAnimal(JSONObject object) {
+        super(object);
+        lastTimeAte = object.getLong("lastTimeAte");
     }
 
     private void checkStatus(long time) {
         if(!isAlive())  return;
-        if(time - lastTimeAte > Consts.MAX_TIME_WITHOUT_GRASS_FOR_FARM_ANIMALS)
-            alive = false;
+        if(time - lastTimeAte > Constants.MAX_TIME_WITHOUT_GRASS_FOR_FARM_ANIMALS)
+            die();
     }
 
     public void eat(long time) {
@@ -18,14 +31,14 @@ public class FarmAnimal extends Animal {
     }
 
     public String create(long time) {
-        if(time - lastTimeAte > Consts.MAX_TIME_WITHOUT_GRASS_TO_PRODUCE)
+        if(time - lastTimeAte > Constants.MAX_TIME_WITHOUT_GRASS_TO_PRODUCE)
             return null;
-        switch (type) {
-            case "chicken":
+        switch (getType()) {
+            case "Turkey":
                 return "egg";
-            case "cow":
+            case "Cow":
                 return "milk";
-            case "sheep":
+            case "Sheep":
                 return "wool";
             default:
                 return "INVALID TYPE";

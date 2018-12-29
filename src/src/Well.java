@@ -1,4 +1,6 @@
-public class Well {
+import org.json.JSONObject;
+
+public class Well implements UpgradeableObject {
     private long capacity, storedWater;
     private int level;
 
@@ -8,14 +10,32 @@ public class Well {
         this.level = 1;
     }
 
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.put("capacity", capacity);
+        object.put("storedWater", storedWater);
+        object.put("level", level);
+        return object;
+    }
+
+    public Well(JSONObject object) {
+        capacity = object.getLong("capacity");
+        storedWater = object.getLong("storedWater");
+        level = object.getInt("level");
+    }
+
     public long getStoredWater() { return storedWater; }
+
+    public int reFillCost() {
+        return Constants.WELL_REFILL_COST[level-1];
+    }
 
     public String reFill(){
         storedWater = capacity;
         return String.format("Well is full now");
     }
 
-    public String useWater() throws Exception{
+    public String useWater(){
         try {
             if (storedWater == 0) {
                 Exception e = new Exception("Well is empty");           //TODO handling not enough water exception!!
@@ -23,7 +43,7 @@ public class Well {
             }
             else {
                 storedWater--;
-                return String.format("Water is now provided for planting");
+                return "Water is now provided for planting";
             }
         }
         catch (Exception e){
@@ -31,10 +51,15 @@ public class Well {
         }
     }
 
-    public String upgrade() throws Exception{
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    public String upgrade() {
         try {                                               //Handling upgrading exception
             if (level == Constants.Well_Max_Level_Upgrade){
-                throw new Exception("Well is fully upgrade");
+                throw new Exception("Well is fully upgraded");
             }
             else {
                 level ++;

@@ -25,7 +25,7 @@ public class Graph {
             Pair<Long, Long> v = queue.poll();
             for(int i = 0; i < 4; ++ i) {
                 long x = v.x + dx[i],
-                     y = v.y + dy[i];
+                        y = v.y + dy[i];
                 Pair<Long, Long> u = new Pair<>(x, y);
                 if(map.getCell(u) == null || map.getCell(u).isBlocked() || distances.containsKey(u))   continue;
                 distances.put(u, distances.get(v) + 1);

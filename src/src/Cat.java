@@ -1,15 +1,31 @@
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Cat extends Animal {
+public class Cat extends Animal implements UpgradeableObject {
     Pair<Long, Long> goal = null;
-    public Cat(String type, long x, long y) {
-        super(type, x, y);
+    public Cat(int ID, long x, long y, int speed) {
+        super(ID, x, y, speed, "Cat",0);
+    }
+
+    @Override
+    public JSONObject dump() {
+        JSONObject object = super.dump();
+        if(goal != null)
+            object.put("goal", goal);
+        return object;
+    }
+
+    public Cat(JSONObject object) {
+        super(object);
+        if(object.has("goal"))
+            goal = new Pair<>(object.getJSONObject("goal"));
     }
 
     private void move(GameMap map) {
         setDirection(new Pair<>(0L, 0L));
-        if(goal.equals(location))
+        if(goal.equals(getLocation()))
             goal = null;
         Graph graph = new Graph(map);
         setDirectionTowardsGoal(graph);
@@ -17,10 +33,10 @@ public class Cat extends Animal {
             ArrayList<Pair<Long, Long>> items = new ArrayList<>();
             Pair<Long, Long> nearest = null;
             long mn = 1000 * 1000 * 1000L;
-            graph.bfs(location);
+            graph.bfs(getLocation());
             for(Pair<Long, Long> u: graph.distances.keySet()) {
                 long dis = graph.distances.get(u);
-                if(u.equals(location) || map.getCell(u).getItems().isEmpty())  continue;
+                if(u.equals(getLocation()) || map.getCell(u).getProducts().isEmpty())  continue;
                 if(mn > dis) {
                     mn = dis;
                     nearest = u;
@@ -28,7 +44,7 @@ public class Cat extends Animal {
                 items.add(u);
             }
             if(!items.isEmpty()) {
-                if (level == 1)
+                if (getLevel() == 1)
                     goal = items.get((new Random()).nextInt(items.size()));
                 else
                     goal = nearest;
@@ -39,7 +55,7 @@ public class Cat extends Animal {
 
     private void setDirectionTowardsGoal(Graph graph) {
         if(goal != null) {
-            Pair<Long, Long> nextMove = graph.nextMoveTowards(location, goal);
+            Pair<Long, Long> nextMove = graph.nextMoveTowards(getLocation(), goal);
             if(nextMove == null)    goal = null;
             else {
                 setDirection(nextMove);
@@ -47,15 +63,18 @@ public class Cat extends Animal {
         }
     }
 
-    public ArrayList<String> collect(GameMap map) {
-        MapCell cell = map.getCell(location);
-        ArrayList<String> items = cell.getItems();
-        cell.clearItems(); // TODO: make sure this statement affects the map
+    public ArrayList<Product> collect(GameMap map) {
+        MapCell cell = map.getCell(getLocation());
+        ArrayList<Product> items = cell.getProducts();
+        cell.clearProducts();
         move(map);
         return items;
     }
 
-    public void upgrade() {
-        level = 2;
+    public String upgrade(){
+        if(level >= 2)
+            return "Cat is fully upgraded";
+        ++ level;
+        return String.format("%s%d has upgraded to level %d", type, id, level);
     }
 }
