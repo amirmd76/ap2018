@@ -36,6 +36,25 @@ public class Storage {
         capacity += Constants.WAREHOUSE_UPGRADE_CAPACITY;
     }
 
+    public boolean canStore(String type, long count) {
+        if(count == 0)  return true;
+        if(count > 0){
+            if(count > capacity - size())
+                return false;
+            for(StorageItem storageItem: items)
+                if(storageItem.type.equals(type))
+                    return true;
+            return true;
+        }
+        boolean flag = false;
+        for(StorageItem storageItem: items)
+            if(storageItem.type.equals(type) && storageItem.count + count >= 0) {
+                flag = true;
+                break;
+            }
+        return flag;
+    }
+
     public String store(String type, long count) { // returns "nok" or "ok", count could be positive or negative
         if(count == 0)  return "ok";
         if(count > 0){

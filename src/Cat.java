@@ -20,7 +20,7 @@ public class Cat extends Animal {
             graph.bfs(getLocation());
             for(Pair<Long, Long> u: graph.distances.keySet()) {
                 long dis = graph.distances.get(u);
-                if(u.equals(getLocation()) || map.getCell(u).getItems().isEmpty())  continue;
+                if(u.equals(getLocation()) || map.getCell(u).getProducts().isEmpty())  continue;
                 if(mn > dis) {
                     mn = dis;
                     nearest = u;
@@ -47,10 +47,10 @@ public class Cat extends Animal {
         }
     }
 
-    public ArrayList<String> collect(GameMap map) {
+    public ArrayList<Product> collect(GameMap map) {
         MapCell cell = map.getCell(getLocation());
-        ArrayList<String> items = cell.getItems();
-        cell.clearItems(); // TODO: make sure this statement affects the map
+        ArrayList<Product> items = cell.getProducts();
+        cell.clearProducts(); // TODO: make sure this statement affects the map
         move(map);
         return items;
     }

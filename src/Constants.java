@@ -20,4 +20,7 @@ public class Constants {
     final static long Helicopter_Upgrade_Capacity = 5;
     final static int Helicopter_Upgrade_Speed = 2;
     final static int Helicopter_Max_Level_Upgrade = 3;
+
+    final static int MAP_HEIGHT = 100;
+    final static int MAP_WIDTH = 100;
 }
