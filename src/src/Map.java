@@ -287,7 +287,7 @@ public class Map implements GameMap {
     public Pair<Long, Long> getRandomCell() {
         Random rand = new Random();
         Long x = (long)rand.nextInt((int) h),
-             y = (long)rand.nextInt((int) w);
+                y = (long)rand.nextInt((int) w);
         return new Pair<>(x, y);
     }
 
@@ -384,5 +384,25 @@ public class Map implements GameMap {
                         product.getLocation().y));
         }
         return str.toString();
+    }
+
+    public ArrayList<Product> getProducts_by_Type(String type){
+        ArrayList<Product> items = new ArrayList<>();
+        for (int i = 0; i < h ; i++){
+            for (int j = 0; j < w; j++){
+                items.addAll(cells[i][j].getProducts_by_Type(type));
+            }
+        }
+        return items;
+    }
+
+    public ArrayList<Animal> getAnimals_by_Type(String type){
+        ArrayList<Animal> animals = new ArrayList<>();
+        for (int i = 0; i < h ; i++){
+            for (int j = 0; j < w; j++){
+                animals.addAll(cells[i][j].getAnimals_by_Type(type));
+            }
+        }
+        return animals;
     }
 }

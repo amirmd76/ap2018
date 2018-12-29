@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class Game {
     ArrayList<Controller> controllers = new ArrayList<>();
-    ArrayList<String> levels = new ArrayList<>();
+    ArrayList<Level> levels = new ArrayList<>();
     long time = 0;
     int currentPlayer = 0;
     Event event = new Event();
@@ -15,7 +15,7 @@ public class Game {
     public JSONObject dump() {
         JSONObject object = new JSONObject();
         object.put("time", time);
-        object.put("levels", levels.toArray());
+//        object.put("levels", levels.toArray());
         JSONArray array = new JSONArray();
         for(Controller controller: controllers)
             array.put(controller.dump());
@@ -27,19 +27,16 @@ public class Game {
     public void load(JSONObject object) {
         time = object.getInt("time");
         currentPlayer = object.getInt("currentPlayer");
-        JSONArray array = object.getJSONArray("levels");
-        for(int i = 0; i < array.length(); ++ i)
-            levels.add(array.getString(i));
-        array = object.getJSONArray("controllers");
+//        JSONArray array = object.getJSONArray("levels");
+//        for(int i = 0; i < array.length(); ++ i)
+//            levels.add(array.getString(i));
+        JSONArray array = object.getJSONArray("controllers");
         for(int i = 0; i < array.length(); ++ i)
             controllers.add(new Controller(array.getJSONObject(i), event));
     }
 
-    public void addLevel(String level) {
-        levels.add(level);
-    }
-
     public void loadGame() throws Exception {
+        controllers.clear();
         File file = new File(Constants.DUMP_FILE);
         FileInputStream fis = new FileInputStream(file);
         byte[] data = new byte[(int) file.length()];
@@ -61,6 +58,7 @@ public class Game {
 
     public Game() {
         controllers.add(new Controller(event, "guest"));
+        levels.add(new Level());
     }
 
     public void main(String[] args) {
@@ -96,10 +94,17 @@ public class Game {
                     controller.produce(cmd.toString());
                     break;
                 case "print":
-                    // TODO: handle levels
+                    if (words[1].equals("levels")) {
+                        for(Level level : levels)
+                            event.printStatus(level.print());
+                        break;
+                    }
                     event.printStatus(controller.print(cmd.toString()));
                     break;
                 case "turn":
+                    for(Level level: levels)
+                        if(level.hasReachedGoals(controller))
+                            event.printStatus(String.format("YOU HAVE COMPLETED LEVEL %d !!!!!!!!", level.getLevelID()));
                     controller.turn(cmd.toString());
                     break;
                 case "save":

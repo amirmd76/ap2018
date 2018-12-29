@@ -132,16 +132,23 @@ public class Cell implements MapCell {
         return res;
     }
 
-    Product getProduct(String type) {
-        int idx = -1;
+    public ArrayList<Product> getProducts_by_Type(String type) {
+        ArrayList<Product> items = new ArrayList<>();
         for(int i = 0; i < products.size(); ++ i)
             if(products.get(i).getType().equals(type)) {
-                idx = i;
-                break;
+                items.add(products.get(i));
             }
-        if(idx == -1)
+        if(items.size() == 0)
             return null;
-        Product res = products.get(idx);
-        return res;
+        return items;
+    }
+
+    public ArrayList<Animal> getAnimals_by_Type (String type){
+        ArrayList<Animal> animals = getAnimals();
+        for (int i = animals.size()-1; i >= 0; i--){
+            if (!animals.get(i).getType().equals(type))
+                animals.remove(animals.get(i));
+        }
+        return animals;
     }
 }
