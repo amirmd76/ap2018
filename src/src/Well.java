@@ -1,3 +1,5 @@
+import org.json.JSONObject;
+
 public class Well implements UpgradeableObject {
     private long capacity, storedWater;
     private int level;
@@ -6,6 +8,20 @@ public class Well implements UpgradeableObject {
         this.capacity = Constants.Well_Water_Capacity[0];
         this.storedWater = capacity;
         this.level = 1;
+    }
+
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.put("capacity", capacity);
+        object.put("storedWater", storedWater);
+        object.put("level", level);
+        return object;
+    }
+
+    public Well(JSONObject object) {
+        capacity = object.getLong("capacity");
+        storedWater = object.getLong("storedWater");
+        level = object.getInt("level");
     }
 
     public long getStoredWater() { return storedWater; }

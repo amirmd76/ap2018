@@ -1,3 +1,5 @@
+import org.json.JSONObject;
+
 public class Animal {
 
     protected Pair<Long, Long> location, direction;        // Location on the map [x,y]
@@ -19,6 +21,31 @@ public class Animal {
         this.id = ID;
         this.SUF = SUF;
     }
+
+    public JSONObject dump() {
+        JSONObject obj = new JSONObject();
+        obj.put("location", location.dump());
+        obj.put("direction", direction.dump());
+        obj.put("speed", speed);
+        obj.put("level", level);
+        obj.put("type", type);
+        obj.put("alive", alive);
+        obj.put("id", id);
+        obj.put("SUF", SUF);
+        return obj;
+    }
+
+    public Animal(JSONObject object) {
+        location = new Pair<>(object.getJSONObject("location"));
+        direction = new Pair<>(object.getJSONObject("direction"));
+        speed = object.getInt("speed");
+        level = object.getInt("level");
+        type = object.getString("type");
+        alive = object.getBoolean("alive");
+        id = object.getInt("id");
+        SUF = object.getInt("SUF");
+    }
+
 
     public String getType() { return type; }
 

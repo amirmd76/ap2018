@@ -31,7 +31,13 @@ public class Constants {
     final static int COW_SPEED = 40;
     final static int TURKEY_SPEED = 50;
     final static int SHEEP_SPEED = 55;
+    final static int WILD_SPEED = 45;
 
-    final static HashMap<String, String> WORKSHOP_INPUT_TYPES = new HashMap<>();
+
+    final static int PRODUCT_DYING_TIME = 20;
+    final static int WILD_ATTACK_TIME = 30;
+
+    final static HashMap<String, String[]> WORKSHOP_INPUT_TYPES = new HashMap<>();
+    final static HashMap<String, Long[]> WORKSHOP_INPUT_SIZES = new HashMap<>();
     final static HashMap<String, String> WORKSHOP_RETURN_TYPES = new HashMap<>();
 }

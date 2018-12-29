@@ -1,3 +1,6 @@
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 public class Cell implements MapCell {
@@ -9,6 +12,45 @@ public class Cell implements MapCell {
         animals = new ArrayList<>();
         grass = 0;
     }
+
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        JSONArray products = new JSONArray();
+        JSONArray animals = new JSONArray();
+        for(Product product: this.products)
+            products.put(product.dump());
+        for(Animal animal: this.animals)
+            products.put(animal.dump());
+        object.put("products", products);
+        object.put("animals", animals);
+        object.put("grass", grass);
+        return object;
+    }
+
+    public Cell(JSONObject object) {
+        products = new ArrayList<>();
+        animals = new ArrayList<>();
+
+        grass = object.getInt("grass");
+        JSONArray animals = object.getJSONArray("animals");
+        for(Object animal: animals) {
+            JSONObject an = (JSONObject)animal;
+            String type = an.getString("type");
+            Animal item;
+            if(type.equals("Cat"))
+                item = new Cat((JSONObject) animal);
+            else if(type.equals("Dog"))
+                item = new Dog((JSONObject) animal);
+            else if(type.equals("Lion") || type.equals("Bear"))
+                item = new Wild((JSONObject) animal);
+            else
+                item = new FarmAnimal((JSONObject) animal);
+            this.animals.add(item);
+        }
+        for(Object product: products)
+            this.products.add(new Product((JSONObject)product));
+    }
+
 
     public void addProduct(Product product) {
         products.add(product);

@@ -1,3 +1,5 @@
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -5,6 +7,20 @@ public class Cat extends Animal implements UpgradeableObject {
     Pair<Long, Long> goal = null;
     public Cat(int ID, long x, long y, int speed) {
         super(ID, x, y, speed, "Cat",0);
+    }
+
+    @Override
+    public JSONObject dump() {
+        JSONObject object = super.dump();
+        if(goal != null)
+            object.put("goal", goal);
+        return object;
+    }
+
+    public Cat(JSONObject object) {
+        super(object);
+        if(object.has("goal"))
+            goal = new Pair<>(object.getJSONObject("goal"));
     }
 
     private void move(GameMap map) {

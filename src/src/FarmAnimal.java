@@ -1,8 +1,21 @@
+import org.json.JSONObject;
+
 public class FarmAnimal extends Animal {
 
     long lastTimeAte = -1;
 
     public FarmAnimal(int ID, String type, long x, long y, int speed) { super(ID, x, y , speed, type,0); }
+
+    public JSONObject dump() {
+        JSONObject object = super.dump();
+        object.put("lastTimeAte", lastTimeAte);
+        return object;
+    }
+
+    public FarmAnimal(JSONObject object) {
+        super(object);
+        lastTimeAte = object.getLong("lastTimeAte");
+    }
 
     private void checkStatus(long time) {
         if(!isAlive())  return;

@@ -1,3 +1,5 @@
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -197,23 +199,23 @@ public class Map implements GameMap {
         return String.format("planted 1 units of grass in cell %d, %d", location.x, location.y);
     }
 
-    public String pickupProduct(Pair<Long, Long> location, String type) {
+    public String pickupProduct(Pair<Long, Long> location) {
         Cell cell = getCell(location);
-        Product product = cell.getProduct(type);
-        if(product == null)
-            return "No such product";
-        if(!storage.canStore(product.type, 1, product.getSize())) {
-            cell.addProduct(product);
-            return "Storage is full";
+        StringBuilder str = new StringBuilder();
+        for(Product product: cell.getProducts()) {
+            String type = product.getType();
+            if(!storage.canStore(product.type, 1, product.getSize()))
+                continue;
+            cell.removeProduct(type);
+            storage.store(product.type, 1, product.getSize());
+            str.append(String.format("Picked up product %s in (%d, %d)\n", product.getType(), location.x, location.y));
         }
-        cell.removeProduct(type);
-        storage.store(product.type, 1, product.getSize());
-        return String.format("Picked up product %s", product.getType());
+        return str.toString();
     }
 
     public void addProduct(Pair<Long, Long> location, String type) {
         Cell cell = getCell(location);
-        cell.addProduct(new Product(location, type));
+        cell.addProduct(new Product(location, type, time));
     }
 
     public String scatter(ArrayList<Product> products) {
@@ -251,6 +253,13 @@ public class Map implements GameMap {
         return "OK"; // TODO: implement
     }
 
+    public Workshop getWorkshop(String type) {
+        for(Workshop workshop: workshops)
+            if(workshop.getType().equals(type))
+                return workshop;
+        return null;
+    }
+
     public String update(int time) {
         int prvTime = this.time;
         if (prvTime == -1)
@@ -262,7 +271,14 @@ public class Map implements GameMap {
             for (int j = 0; j < w; ++j) {
                 for (Animal animal : cells[i][j].getAnimals()) {
                     animal.setLocation(new Pair<>((long) i, (long) j));
-                    animals.add(animal);
+                    if(animal.isAlive())
+                        animals.add(animal);
+                    else {
+                        if(animal.getType().equals("Cat"))
+                            cat = -1;
+                        else if(animal.getType().equals("Dog"))
+                            dog = -1;
+                    }
                 }
                 cells[i][j].clearAnimals();
             }
@@ -285,6 +301,20 @@ public class Map implements GameMap {
             if (!(animal instanceof Wild) || !((Wild) animal).isPrisoned())
                 str.append(animal.walk(time - prvTime));
             getCell(animal.getLocation()).addAnimal(animal);
+        }
+
+        ArrayList<Product> products = new ArrayList<>();
+        for (int i = 0; i < h; ++i)
+            for (int j = 0; j < w; ++j) {
+                products.addAll(cells[i][j].getProducts());
+                cells[i][j].clearAnimals();
+            }
+        for(Product product: products) {
+            if (time - product.getCreationTime() < Constants.PRODUCT_DYING_TIME)
+                getCell(product.getLocation()).addProduct(product);
+            else
+                str.append(String.format("Product %s removed from (%d, %d)\n", product.getType(), product.getLocation().x,
+                        product.getLocation().y));
         }
         return str.toString();
     }

@@ -1,7 +1,13 @@
+import org.json.JSONObject;
+
 public class Dog extends Animal implements UpgradeableObject {
 
     public Dog(int ID, long x, long y, int speed, int SUF) {
         super(ID, x, y, speed, "Dog", SUF);
+    }
+
+    public Dog(JSONObject object) {
+        super(object);
     }
 
     public String kill(Wild wild){

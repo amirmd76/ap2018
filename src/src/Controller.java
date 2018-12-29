@@ -1,4 +1,7 @@
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Controller {
     Player player;
@@ -12,7 +15,7 @@ public class Controller {
         this.event = event;
     }
 
-    public void addAnimalToMap(Map map, Animal animal) {
+    public Pair<Long, Long> addAnimalToMap(Map map, Animal animal) {
         Pair<Long, Long> loc = map.getRandomCell();
         map.getCell(loc).addAnimal(animal);
         animal.setLocation(loc);
@@ -21,6 +24,7 @@ public class Controller {
         else if(animal.getType().equals("Dog"))
             map.dog = animal.getId();
         event.printStatus(String.format("A new %s added to (%d, %d)", animal.getType().toLowerCase(), loc.x, loc.y));
+        return loc;
     }
 
     public void add(String command) {
@@ -93,6 +97,10 @@ public class Controller {
                 break;
             case "workshop":
                 String workshopType = words[1];
+                if(player.getMap().getWorkshop(workshopType) != null) {
+                    event.printStatus("Workshop already exists");
+                    return;
+                }
                 try {
                     account.spend("buy", String.format("workshop ", workshopType), false);
                 }
@@ -107,21 +115,48 @@ public class Controller {
         }
     }
 
+    public void pickup(String command) {
+        String[] words = command.split(" ");
+        long x = Long.parseLong(words[0]);
+        long y = Long.parseLong(words[1]);
+        player.getMap().pickupProduct(new Pair<>(x, y));
+    }
+
     public void buy(String command) {
         String[] words = command.split(" ");
         String type = words[0];
         int count = Integer.parseInt(words[1]);
+        Account account = player.account;
+        long cost = count * account.getCost("buy", type);
+        if(cost > account.getMoney()){
+            event.printStatus("Not enough money");
+            return;
+        }
+        try {
+            event.printStatus(account.spend("buying " + type, cost, true));
+        }
+        catch (Exception ignore){}
         event.printStatus(helicopter.buy(type, count));
-    }
-
-    public void sell(String command) {
-
     }
 
     public void completeBuy() {
         Pair<ArrayList<Product>, String> res = helicopter.completeBuying();
         event.printStatus(res.y);
         event.printStatus(player.getMap().scatter(res.x));
+    }
+
+    public void sell(String command) {
+        String[] words = command.split(" ");
+        String type = words[0];
+        int count = Integer.parseInt(words[1]);
+        ArrayList<Product> items = new ArrayList<>();
+        items.add(new Product(null, type, time));
+        while (count -- > 0)
+            event.printStatus(truck.sell(player.getMap().getStorage() ,type, items));
+    }
+
+    public void completeSell(String command) {
+        event.printStatus(truck.completeSelling(player.getMap().getStorage(), player.getAccount()));
     }
 
     public void cage(String command) {
@@ -219,15 +254,71 @@ public class Controller {
         }
     }
 
+    public void produce(String command) {
+        Workshop workshop = player.getMap().getWorkshop(command.split(" ")[0]);
+        if(workshop == null) {
+            event.printStatus("No such workshop");
+            return;
+        }
+        produce(workshop.getID());
+    }
+
+    public void produce(int id) {
+        Workshop workshop = player.getMap().getWorkshopsMap().get(id);
+        if(workshop == null) {
+            event.printStatus("No such workshop");
+            return;
+        }
+        Pair<ArrayList<Product>, String> res = workshop.produce(player.getMap().getStorage());
+        event.printStatus(res.y);
+        ArrayList<Product> products = res.x;
+        if(products.isEmpty())  return;
+        String productType = products.get(0).getType();
+        if(productType.equals("Turkey")) {
+            for(int i = 0; i < products.size(); ++ i)
+                add("turkey");
+            return;
+        }
+        player.getMap().scatter(products);
+    }
+
     public void turn(String command){
-        update(time + 1);
+        update(time + Integer.parseInt(command));
 
     }
-    public void start(String command) {
 
-    }
     public void update(int time) {
         this.time = time;
-        player.update(time);
+        StringBuilder str = new StringBuilder();
+        if (time % Constants.WILD_ATTACK_TIME == 0) {
+            String type;
+            if ((new Random()).nextBoolean())
+                type = "Lion";
+            else
+                type = "Bear";
+            int wildID = utils.getID("animal");
+            Pair<Long, Long> loc = addAnimalToMap(player.getMap(), new Wild(wildID, type, 0, 0, Constants.WILD_SPEED, 1));
+            event.printStatus(String.format("%s attacked (%d, %d)\n", type.toLowerCase(), loc.x, loc.y));
+            Cell cell = player.getMap().getCell(loc);
+            cell.clearProducts();
+            boolean isDogThere = false;
+            for (Animal animal : cell.getAnimals()) {
+                if (animal.getId() != wildID) {
+                    str.append(String.format("%s in (%d, %d) died\n", animal.getType(), loc.x, loc.y));
+                }
+                if (animal.getType().equals("Dog"))
+                    isDogThere = true;
+                animal.die();
+            }
+            if (isDogThere) {
+                str.append(String.format("%s in (%d, %d) died\n", type, loc.x, loc.y));
+                for (Animal animal : cell.getAnimals()) {
+                    if (animal.getId() == wildID)
+                        animal.die();
+                }
+
+            }
+            event.printStatus(str + player.update(time));
+        }
     }
 }

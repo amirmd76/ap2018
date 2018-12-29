@@ -1,18 +1,35 @@
+import org.json.JSONObject;
+
 public class Wild extends Animal {
 
-    private boolean prisoned;         //For stating that this wild animal is in the prisoned or not
-    private final int size;
-    private final int price;
-    private int prisonedTime;
+    private boolean prisoned = false;         //For stating that this wild animal is in the prisoned or not
+    private int size = 1;
+    private int prisonedTime = 0;
 
     public Wild(int ID, String type, long x, long y, int speed, int SUF) {
         super(ID, x, y, speed, type, SUF);
         prisoned = false;
         switch (this.getType()) {
-            case "lion": { this.size = 20; this.price = 150; break;}
-            case "bear": { this.size = 20; this.price = 100; break;}
-            default: {this.size = 0; this.price = 0;}
+            case "Lion": { this.size = 20; break;}
+            case "Bear": { this.size = 20; break;}
+            default: {this.size = 0;}
         }
+    }
+
+    @Override
+    public JSONObject dump() {
+        JSONObject object = super.dump();
+        object.put("prisoned", prisoned);
+        object.put("size", size);
+        object.put("prisonedTime", prisonedTime);
+        return object;
+    }
+
+    public Wild(JSONObject object) {
+        super(object);
+        prisoned = object.getBoolean("prisoned");
+        prisonedTime = object.getInt("prisonedTime");
+        size = object.getInt("size");
     }
 
     public void breakOut() { prisoned = false; }

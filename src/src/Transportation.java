@@ -1,3 +1,6 @@
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 class FullException extends Exception {
@@ -13,9 +16,9 @@ class Type_Mismatch extends Exception {
 }
 
 class Box {
-    private final int capacity = 20;
+    private int capacity = 20;
     private int left_Capacity;
-    private final String type;
+    private String type;
     private ArrayList<Product> products = new ArrayList<>();
     private int items_Count;
 
@@ -23,6 +26,29 @@ class Box {
         this.type = type;
         this.left_Capacity = capacity;
         this.items_Count =0;
+    }
+
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.put("capacity", capacity);
+        object.put("leftCapacity", left_Capacity);
+        object.put("type", type);
+        object.put("itemsCount", items_Count);
+        JSONArray array = new JSONArray();
+        for(Product product: products)
+            array.put(product.dump());
+        object.put("products", array);
+        return object;
+    }
+
+    public Box(JSONObject object) {
+        capacity = object.getInt(("capacity"));
+        left_Capacity = object.getInt("leftCapacity");
+        type = object.getString("type");
+        items_Count = object.getInt("itemsCount");
+        JSONArray array = object.getJSONArray("products");
+        for(Object obj: array)
+            products.add(new Product((JSONObject)obj));
     }
 
     public ArrayList<Product> getProducts() { return products; }
@@ -69,6 +95,11 @@ public class Transportation implements UpgradeableObject {
         level = 1;
     }
 
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.
+    }
+
     public String getType() { return type; }
 
     public int getTravelDuration() { return travel_Duration; }
@@ -76,6 +107,7 @@ public class Transportation implements UpgradeableObject {
     public String sell(Storage storage, String type, ArrayList<Product> items){                //TODO Handle money in account
         if(items.isEmpty())
             return "Truck is empty";
+        ArrayList<Product> storedItems = new ArrayList<>();
         int count = 0, i;                                                              //Selling products of one type
         i = getBox(type);
         if (i >= box_Count_Capacity)
@@ -89,11 +121,20 @@ public class Transportation implements UpgradeableObject {
         try {                                                //For selling many types this method should be called for individual type of products
             for (Product items2 : items){
                 boxes.get(i).addToBox(items2);
+                storedItems.add(items2);
                 count++;
             }
         }        //Command would be: sell product_Type1 Count1, sell product_Type2 Count2... at the end selling will be done by command "sell" with no argument
         catch (FullException e){
             if (count == 0){
+                if(count < items.size()) {
+                    ArrayList<Product> notStoredItems = new ArrayList<>();
+                    for(Product product: items) {
+                        if(!storedItems.contains(product))
+                            notStoredItems.add(product);
+                    }
+                    sell(storage, type, notStoredItems);
+                }
                 return e.toString();
             }
         }
@@ -105,14 +146,19 @@ public class Transportation implements UpgradeableObject {
         }
     }
 
-    public String completeSelling(Storage storage){
-        String str = "";
+    public String completeSelling(Storage storage, Account account){
+        StringBuilder str = new StringBuilder();
         for (Box box: boxes){
             storage.store(box.getType(), -box.getItemsCount(), 0);
-            str += String.format("%d of %s have been sold /n", box.getItemsCount(), box.getType());
+            for(int i = 0; i < box.getItemsCount(); i ++)
+                try {
+                    account.spend("sell", box.getType(), true);
+                }
+                catch (Exception ignore){}
+            str.append(String.format("%d of %s have been sold /n", box.getItemsCount(), box.getType()));
         }
         removeBoxesAtTheEndOfWork();
-        return str;
+        return str.toString();
     }
 
     public String buy(String type, long count){                 //TODO Handle money in account
@@ -134,6 +180,8 @@ public class Transportation implements UpgradeableObject {
             if (counter == 0){
                 return e.toString();
             }
+            else if(count < items.size())
+                buy(type, count - counter);
         }
         catch (Exception e){
             return e.toString();

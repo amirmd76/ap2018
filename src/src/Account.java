@@ -1,3 +1,5 @@
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -8,8 +10,24 @@ public class Account {
     public Account() {money = 0;}
     public Account(long money) {this.money = money;}
 
+    public JSONObject dump() {
+        JSONObject obj = new JSONObject();
+        obj.put("money", money);
+        return obj;
+    }
+
+    public Account(JSONObject data) {
+        money = data.getLong("money");
+    }
+
+
     public long getMoney() {
         return money;
+    }
+
+    public long getCost(String name, String type) {
+        return costs.get(new Pair<>(name, type));
+
     }
 
     public String spend(ArrayList<Pair<String, String>> actions, boolean apply) throws NotFoundException, NotEnoughMoneyException {
