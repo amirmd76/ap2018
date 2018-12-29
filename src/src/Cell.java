@@ -1,6 +1,5 @@
-import org.json.JSONArray;
-import org.json.JSONObject;
-
+//import org.json.JSONArray;
+//import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class Cell implements MapCell {
@@ -13,7 +12,7 @@ public class Cell implements MapCell {
         grass = 0;
     }
 
-    public JSONObject dump() {
+   /* public JSONObject dump() {
         JSONObject object = new JSONObject();
         JSONArray products = new JSONArray();
         JSONArray animals = new JSONArray();
@@ -50,7 +49,7 @@ public class Cell implements MapCell {
         for(Object product: products)
             this.products.add(new Product((JSONObject)product));
     }
-
+*/
 
     public void addProduct(Product product) {
         products.add(product);
@@ -121,16 +120,23 @@ public class Cell implements MapCell {
         return res;
     }
 
-    Product getProduct(String type) {
-        int idx = -1;
+    public ArrayList<Product> getProducts_by_Type(String type) {
+        ArrayList<Product> items = new ArrayList<>();
         for(int i = 0; i < products.size(); ++ i)
             if(products.get(i).getType().equals(type)) {
-                idx = i;
-                break;
+                items.add(products.get(i));
             }
-        if(idx == -1)
+        if(items.size() == 0)
             return null;
-        Product res = products.get(idx);
-        return res;
+        return items;
+    }
+
+    public ArrayList<Animal> getAnimals_by_Type (String type){
+        ArrayList<Animal> animals = getAnimals();
+        for (int i = animals.size()-1; i >= 0; i--){
+            if (!animals.get(i).getType().equals(type))
+                animals.remove(animals.get(i));
+        }
+        return animals;
     }
 }
