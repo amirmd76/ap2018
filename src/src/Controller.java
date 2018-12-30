@@ -1,3 +1,4 @@
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -5,14 +6,32 @@ import java.util.Random;
 
 public class Controller {
     Player player;
-    Transportation truck = new Transportation("truck"),
-            helicopter = new Transportation("helicopter");
+    Transportation truck = new Transportation("Truck"),
+            helicopter = new Transportation("Helicopter");
     Event event;
     ControllerUtils utils = new ControllerUtils();
     int time = 0;
 
-    Controller(Event event) {
+    Controller(Event event, String playerName) {
         this.event = event;
+        player = new Player(playerName);
+    }
+
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.put("player", player.dump());
+        object.put("truck", truck.dump());
+        object.put("helicopter", helicopter.dump());
+        object.put("time", time);
+        return object;
+    }
+
+    public Controller(JSONObject object, Event event) {
+        this.event = event;
+        player = new Player(object.getJSONObject("player"));
+        truck = new Transportation(object.getJSONObject("truck"));
+        helicopter = new Transportation(object.getJSONObject("helicopter"));
+        time = object.getInt("time");
     }
 
     public Pair<Long, Long> addAnimalToMap(Map map, Animal animal) {
@@ -25,6 +44,43 @@ public class Controller {
             map.dog = animal.getId();
         event.printStatus(String.format("A new %s added to (%d, %d)", animal.getType().toLowerCase(), loc.x, loc.y));
         return loc;
+    }
+
+    public String print(String command) {
+        StringBuilder ans = new StringBuilder();
+        switch (command) {
+            case "info":
+                ans.append(player.getAccount().print());
+                ans.append(player.getMap().print());
+                ans.append(player.getMap().getStorage().print());
+                ans.append(player.getMap().getWell().print());
+                for (Workshop workshop : player.getMap().getWorkshops())
+                    ans.append(workshop.print());
+                ans.append(helicopter.print());
+                ans.append(truck.print());
+                break;
+            case "map":
+                ans = new StringBuilder(player.getMap().print());
+                break;
+            case "well":
+                ans = new StringBuilder(player.getMap().getWell().print());
+                break;
+            case "workshop":
+                for (Workshop workshop : player.getMap().getWorkshops())
+                    ans.append(workshop.print());
+                break;
+            case "warehouse":
+                ans = new StringBuilder(player.getMap().getStorage().print());
+                break;
+            case "truck":
+                ans = new StringBuilder(truck.print());
+                break;
+            case "helicopter":
+                ans = new StringBuilder(helicopter.print());
+                break;
+        }
+        return ans.toString();
+
     }
 
     public void add(String command) {
@@ -89,7 +145,7 @@ public class Controller {
                     event.printStatus("Not enough money");
                     return;
                 }
-                addAnimalToMap(map, new FarmAnimal(utils.getID("animal"), t, 0L, 0L, speed));
+                addAnimalToMap(map, new FarmAnimal(utils.getID("animal"), t, 0L, 0L, speed, time));
                 try {
                     account.spend("buy", t, true);
                 } catch (Exception ignore) {
@@ -283,7 +339,9 @@ public class Controller {
     }
 
     public void turn(String command){
-        update(time + Integer.parseInt(command));
+        int turns = Integer.parseInt(command);
+        for(int i = 0; i < turns; ++ i)
+            update(time + 1);
 
     }
 

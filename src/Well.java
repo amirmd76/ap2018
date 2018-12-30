@@ -1,3 +1,4 @@
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Well implements UpgradeableObject {
@@ -12,16 +13,24 @@ public class Well implements UpgradeableObject {
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.put("capacity", capacity);
-        object.put("storedWater", storedWater);
-        object.put("level", level);
+        try {
+            object.put("capacity", capacity);
+            object.put("storedWater", storedWater);
+            object.put("level", level);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return object;
     }
 
     public Well(JSONObject object) {
-        capacity = object.getLong("capacity");
-        storedWater = object.getLong("storedWater");
-        level = object.getInt("level");
+        try {
+            capacity = object.getLong("capacity");
+            storedWater = object.getLong("storedWater");
+            level = object.getInt("level");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public String print() {

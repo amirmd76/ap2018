@@ -1,4 +1,6 @@
-import java.lang.ref.PhantomReference;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -11,6 +13,60 @@ public class Map implements GameMap {
     int cat = -1, dog = -1;
     private Well well = new Well();
     ArrayList<Workshop> workshops = new ArrayList<>();
+
+    public String print() {
+        StringBuilder ans = new StringBuilder(String.format("Map is %d X %d", h, w));
+        ans.append("\nThe cells are:\n");
+        for(int i = 0; i < h; ++ i)
+            for(int j = 0; j < w; ++ j)
+                ans.append(cells[i][j].print(i, j));
+        return ans.toString();
+    }
+
+    public JSONObject dump() {
+        JSONObject object = new JSONObject();
+        object.put("h", h);
+        object.put("w", w);
+        object.put("storage", storage.dump());
+        object.put("time", time);
+        object.put("cat", cat);
+        object.put("dog", dog);
+        object.put("well", well.dump());
+        JSONArray array = new JSONArray();
+        for(Workshop workshop: workshops)
+            array.put(workshop.dump());
+        object.put("workshops", array);
+        array = new JSONArray();
+        for(int i = 0; i < h; ++ i) {
+            JSONArray row = new JSONArray();
+            for(int j = 0; j < w; ++ j)
+                row.put(cells[i][j].dump());
+            array.put(row);
+        }
+        object.put("cells", array);
+        return object;
+    }
+
+    public Map(JSONObject object) {
+        h = object.getInt("h");
+        w = object.getInt("w");
+        storage = new Storage(object.getJSONObject("storage"));
+        time = object.getInt("time");
+        cat = object.getInt("cat");
+        dog = object.getInt("dog");
+        well = new Well(object.getJSONObject("well"));
+        JSONArray array = object.getJSONArray("workshops");
+        for(Object item: array)
+            workshops.add(new Workshop((JSONObject)item));
+        array = object.getJSONArray("cells");
+        cells = new Cell[(int)h][];
+        for(int i = 0; i < h; ++ i) {
+            JSONArray row = array.getJSONArray(i);
+            cells[i] = new Cell[(int)w];
+            for(int j = 0; j < w; ++ j)
+                cells[i][j] = new Cell(row.getJSONObject(j));
+        }
+    }
 
     public Well getWell() {
         return well;
@@ -270,8 +326,20 @@ public class Map implements GameMap {
             for (int j = 0; j < w; ++j) {
                 for (Animal animal : cells[i][j].getAnimals()) {
                     animal.setLocation(new Pair<>((long) i, (long) j));
-                    if(animal.isAlive())
-                        animals.add(animal);
+                    if(animal.isAlive()) {
+                        if(cells[i][j].getGrass() > 0 && animal instanceof FarmAnimal && time - ((FarmAnimal) animal).lastTimeAte >=
+                        Constants.EAT_TIME) {
+                            cells[i][j].setGrass(cells[i][j].getGrass() - 1);
+                            ((FarmAnimal) animal).eat(time);
+                        }
+                        if(animal instanceof FarmAnimal)
+                            ((FarmAnimal) animal).checkStatus(time);
+                        if(animal.isAlive())
+                            animals.add(animal);
+                        else {
+                            str.append(String.format("%s in (%d, %d) starved to death\n", animal.getType(), i, j));
+                        }
+                    }
                     else {
                         if(animal.getType().equals("Cat"))
                             cat = -1;

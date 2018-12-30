@@ -1,3 +1,4 @@
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -12,7 +13,11 @@ public class Account {
 
     public JSONObject dump() {
         JSONObject obj = new JSONObject();
-        obj.put("money", money);
+        try {
+            obj.put("money", money);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return obj;
     }
 
@@ -21,7 +26,11 @@ public class Account {
     }
 
     public Account(JSONObject data) {
-        money = data.getLong("money");
+        try {
+            money = data.getLong("money");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
 

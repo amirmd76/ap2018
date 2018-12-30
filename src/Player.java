@@ -1,3 +1,4 @@
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Player implements GamePlayer {
@@ -14,20 +15,28 @@ public class Player implements GamePlayer {
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.put("account", account.dump());
-        object.put("playerName", playerName);
-        object.put("Directory", Directory);
-        object.put("map", map.dump());
-        object.put("time", time);
+        try {
+            object.put("account", account.dump());
+            object.put("playerName", playerName);
+            object.put("Directory", Directory);
+            object.put("map", map.dump());
+            object.put("time", time);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return object;
     }
 
     public Player(JSONObject object) {
-        account = new Account(object.getJSONObject("account"));
-        playerName = object.getString("playerName");
-        Directory = object.getString("Directory");
-        map = new Map(object.getJSONObject("map"));
-        time = object.getInt("time");
+        try {
+            account = new Account(object.getJSONObject("account"));
+            playerName = object.getString("playerName");
+            Directory = object.getString("Directory");
+            map = new Map(object.getJSONObject("map"));
+            time = object.getInt("time");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -1,4 +1,5 @@
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -38,25 +39,33 @@ class Box {
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.put("capacity", capacity);
-        object.put("leftCapacity", left_Capacity);
-        object.put("type", type);
-        object.put("itemsCount", items_Count);
-        JSONArray array = new JSONArray();
-        for(Product product: products)
-            array.put(product.dump());
-        object.put("products", array);
+        try {
+            object.put("capacity", capacity);
+            object.put("leftCapacity", left_Capacity);
+            object.put("type", type);
+            object.put("itemsCount", items_Count);
+            JSONArray array = new JSONArray();
+            for(Product product: products)
+                array.put(product.dump());
+            object.put("products", array);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return object;
     }
 
     public Box(JSONObject object) {
-        capacity = object.getInt(("capacity"));
-        left_Capacity = object.getInt("leftCapacity");
-        type = object.getString("type");
-        items_Count = object.getInt("itemsCount");
-        JSONArray array = object.getJSONArray("products");
-        for(Object obj: array)
-            products.add(new Product((JSONObject)obj));
+        try {
+            capacity = object.getInt(("capacity"));
+            left_Capacity = object.getInt("leftCapacity");
+            type = object.getString("type");
+            items_Count = object.getInt("itemsCount");
+            JSONArray array = object.getJSONArray("products");
+            for(int i = 0; i < array.length(); i++)
+                products.add(new Product((JSONObject)array.get(i)));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public ArrayList<Product> getProducts() { return products; }
@@ -114,25 +123,33 @@ public class Transportation implements UpgradeableObject {
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.put("type", type);
-        object.put("boxCountCapacity", box_Count_Capacity);
-        object.put("level", level);
-        object.put("travelDuration", travel_Duration);
-        JSONArray array = new JSONArray();
-        for(Box box: boxes)
-            array.put(box.dump());
-        object.put("boxes", array);
+        try {
+            object.put("type", type);
+            object.put("boxCountCapacity", box_Count_Capacity);
+            object.put("level", level);
+            object.put("travelDuration", travel_Duration);
+            JSONArray array = new JSONArray();
+            for(Box box: boxes)
+                array.put(box.dump());
+            object.put("boxes", array);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return object;
     }
 
     public Transportation(JSONObject object) {
-        type = object.getString("type");
-        box_Count_Capacity = object.getLong("boxCountCapacity");
-        level = object.getInt("level");
-        travel_Duration = object.getInt("travelDuration");
-        JSONArray array = object.getJSONArray("boxes");
-        for(Object item: array)
-            boxes.add(new Box((JSONObject)item));
+        try {
+            type = object.getString("type");
+            box_Count_Capacity = object.getLong("boxCountCapacity");
+            level = object.getInt("level");
+            travel_Duration = object.getInt("travelDuration");
+            JSONArray array = object.getJSONArray("boxes");
+            for(int i = 0; i < array.length(); i++)
+                boxes.add(new Box((JSONObject)array.get(i)));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getType() { return type; }

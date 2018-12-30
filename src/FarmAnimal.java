@@ -1,3 +1,4 @@
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class FarmAnimal extends Animal {
@@ -11,13 +12,21 @@ public class FarmAnimal extends Animal {
 
     public JSONObject dump() {
         JSONObject object = super.dump();
-        object.put("lastTimeAte", lastTimeAte);
+        try {
+            object.put("lastTimeAte", lastTimeAte);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return object;
     }
 
     public FarmAnimal(JSONObject object) {
         super(object);
-        lastTimeAte = object.getLong("lastTimeAte");
+        try {
+            lastTimeAte = object.getLong("lastTimeAte");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public void checkStatus(long time) {

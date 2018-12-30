@@ -1,5 +1,5 @@
-import com.sun.org.apache.bcel.internal.generic.JsrInstruction;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -16,16 +16,24 @@ class StorageItem {
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.put("type", type);
-        object.put("count", count);
-        object.put("size", size);
+        try {
+            object.put("type", type);
+            object.put("count", count);
+            object.put("size", size);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return object;
     }
 
     public StorageItem(JSONObject object) {
-        type = object.getString("type");
-        count = object.getLong("count");
-        size = object.getLong("size");
+        try {
+            type = object.getString("type");
+            count = object.getLong("count");
+            size = object.getLong("size");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }
 
@@ -43,11 +51,15 @@ public class Storage implements UpgradeableObject {
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.put("level", level);
-        JSONArray items = new JSONArray();
-        for(StorageItem item: this.items)
-            items.put(item.dump());
-        object.put("items", items);
+        try {
+            object.put("level", level);
+            JSONArray items = new JSONArray();
+            for(StorageItem item: this.items)
+                items.put(item.dump());
+            object.put("items", items);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return object;
     }
     public Storage() {
@@ -57,10 +69,15 @@ public class Storage implements UpgradeableObject {
 
     public Storage(JSONObject object) {
         this.items = new ArrayList<>();
-        level = object.getInt("level");
-        JSONArray items = object.getJSONArray("items");
-        for(Object item: items)
-            this.items.add(new StorageItem((JSONObject)item));
+        try {
+            level = object.getInt("level");
+
+            JSONArray items = object.getJSONArray("items");
+            for(int i =0 ; i < items.length(); i++)
+                this.items.add(new StorageItem((JSONObject)items.get(i)));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private long size() {
