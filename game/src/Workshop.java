@@ -1,5 +1,4 @@
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -38,40 +37,32 @@ public class Workshop implements UpgradeableObject {
 
     public JSONObject dump() {
         JSONObject object = new JSONObject();
-        try {
-            object.put("type", type);
-            object.put("level", level);
-            object.put("timeOfProduce", timeOfProduce);
-            object.put("maxLevel", maxLevel);
-            object.put("inputType", inputType);
-            object.put("returnType", returnType);
-            object.put("inputTypeSizes", inputTypeSizes);
-            object.put("ID", ID);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        object.put("type", type);
+        object.put("level", level);
+        object.put("timeOfProduce", timeOfProduce);
+        object.put("maxLevel", maxLevel);
+        object.put("inputType", inputType);
+        object.put("returnType", returnType);
+        object.put("inputTypeSizes", inputTypeSizes);
+        object.put("ID", ID);
         return object;
     }
 
     public Workshop(JSONObject object) {
-        try {
-            type = object.getString("type");
-            level = object.getInt("level");
-            timeOfProduce = object.getInt("timeOfProduce");
-            maxLevel = object.getInt("maxLevel");
-            JSONArray inputType = object.getJSONArray("inputType");
-            this.inputType = new String[inputType.length()];
-            for(int i = 0; i < inputType.length(); ++ i)
-                this.inputType[i] = inputType.getString(i);
-            JSONArray inputTypeSizes = object.getJSONArray("inputTypeSizes");
-            this.inputTypeSizes = new Long[inputTypeSizes.length()];
-            for(int i = 0; i < inputTypeSizes.length(); i ++)
-                this.inputTypeSizes[i] = inputTypeSizes.getLong(i);
-            returnType = object.getString("returnType");
-            ID = object.getInt("ID");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        type = object.getString("type");
+        level = object.getInt("level");
+        timeOfProduce = object.getInt("timeOfProduce");
+        maxLevel = object.getInt("maxLevel");
+        JSONArray inputType = object.getJSONArray("inputType");
+        this.inputType = new String[inputType.length()];
+        for(int i = 0; i < inputType.length(); ++ i)
+            this.inputType[i] = inputType.getString(i);
+        JSONArray inputTypeSizes = object.getJSONArray("inputTypeSizes");
+        this.inputTypeSizes = new Long[inputTypeSizes.length()];
+        for(int i = 0; i < inputTypeSizes.length(); i ++)
+            this.inputTypeSizes[i] = inputTypeSizes.getLong(i);
+        returnType = object.getString("returnType");
+        ID = object.getInt("ID");
     }
 
 
