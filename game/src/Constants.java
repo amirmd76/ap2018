@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public class Constants {
     public final static long MAX_TIME_WITHOUT_GRASS_FOR_FARM_ANIMALS = 40;
-    public final static int EAT_TIME = 20;
+    public final static int EAT_TIME = 2;
     final static long MAX_TIME_WITHOUT_GRASS_TO_PRODUCE = 10;
 
     final static long WAREHOUSE_INITIAL_CAPACITY = 50;
@@ -19,19 +19,20 @@ public class Constants {
     final static int Truck_Max_Level_Upgrade = 4;
 
 
-    final static int MAP_HEIGHT = 100;
-    final static int MAP_WIDTH = 100;
+    final static int MAP_HEIGHT = 9;
+    final static int MAP_WIDTH = 11;
     final static long Helicopter_Initial_Box_Capacity = 2;
     final static int Helicopter_Initial_Travel_Duration = 12;
     final static int Helicopter_Upgrade_Travel_Duration = 3;
     final static int Helicopter_Max_Level_Upgrade = 4;
     final static int WILD_CAGE_TIME = 10;
 
-    final static long Initial_Player_Money = 1000;
+    final static long Initial_Player_Money = 10000;
     final static int CAT_SPEED = 38;
     final static int DOG_SPEED = 65;
     final static int COW_SPEED = 40;
     final static int TURKEY_SPEED = 50;
+    final static int CHICKEN_SPEED = 50;
     final static int SHEEP_SPEED = 55;
     final static int WILD_SPEED = 45;
 

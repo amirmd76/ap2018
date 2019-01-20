@@ -6,9 +6,21 @@ import java.util.HashMap;
 public class Account {
     private static HashMap<Pair<String, String>, Long> costs = new HashMap<>(); // TODO: fill
     private long money;
+    private static Pair<String, String> test;
 
-    public Account() {money = 0;}
-    public Account(long money) {this.money = money;}
+    private static void fill() {
+        costs.put(new Pair<>("buy", "Cat"), 10L);
+        costs.put(new Pair<>("buy", "Dog"), 10L);
+        costs.put(new Pair<>("buy", "Cow"), 10L);
+        costs.put(new Pair<>("buy", "Sheep"), 10L);
+        costs.put(new Pair<>("buy", "Chicken"), 10L);
+        costs.put(new Pair<>("buy", "Turkey"), 10L);
+
+
+    }
+
+    public Account() {money = 0;fill();}
+    public Account(long money) {this.money = money;fill();}
 
     public JSONObject dump() {
         JSONObject obj = new JSONObject();

@@ -35,6 +35,7 @@ public class Controller {
 
     public Pair<Long, Long> addAnimalToMap(Map map, Animal animal) {
         Pair<Long, Long> loc = map.getRandomCell();
+        animal.setDirection(map.getRandomDirection());
         map.getCell(loc).addAnimal(animal);
         animal.setLocation(loc);
         if(animal.getType().equals("Cat"))
@@ -83,7 +84,7 @@ public class Controller {
     }
 
     public void add(String command) {
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         String type = words[0].toLowerCase();
         Account account = player.getAccount();
         Map map = player.getMap();
@@ -112,10 +113,10 @@ public class Controller {
                     event.printStatus("Not enough money");
                     return;
                 }
-                if (map.dog != -1) {
-                    event.printStatus("There's already a dog");
-                    return;
-                }
+//                if (map.dog != -1) {
+//                    event.printStatus("There's already a dog");
+//                    return;
+//                }
                 addAnimalToMap(map, new Dog(utils.getID("animal"), 0L, 0L, Constants.DOG_SPEED, 2));
                 try {
                     account.spend("buy", "Dog", true);
@@ -123,11 +124,15 @@ public class Controller {
                 }
                 break;
             case "turkey":
+            case "chicken":
             case "cow":
             case "sheep":
                 String t = Character.toString(type.charAt(0)).toUpperCase() + type.substring(1);
                 int speed;
                 switch (type) {
+                    case "chicken":
+                        speed = Constants.CHICKEN_SPEED;
+                        break;
                     case "turkey":
                         speed = Constants.TURKEY_SPEED;
                         break;
@@ -171,14 +176,14 @@ public class Controller {
     }
 
     public void pickup(String command) {
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         long x = Long.parseLong(words[0]);
         long y = Long.parseLong(words[1]);
         player.getMap().pickupProduct(new Pair<>(x, y));
     }
 
     public void buy(String command) {
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         String type = words[0];
         int count = Integer.parseInt(words[1]);
         Account account = player.account;
@@ -201,7 +206,7 @@ public class Controller {
     }
 
     public void sell(String command) {
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         String type = words[0];
         int count = Integer.parseInt(words[1]);
         ArrayList<Product> items = new ArrayList<>();
@@ -215,21 +220,21 @@ public class Controller {
     }
 
     public void cage(String command) {
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         int id = Integer.parseInt(words[0]);
         Map map = player.getMap();
         event.printStatus(map.cageWild(id));
     }
 
     public void storeWild(String command) {
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         int id = Integer.parseInt(words[0]);
         Map map = player.getMap();
         event.printStatus(map.storeWild(id));
     }
 
     public void plant(String command){
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         long x = Long.parseLong(words[0]);
         long y = Long.parseLong(words[1]);
         int count = 1;
@@ -280,7 +285,7 @@ public class Controller {
     }
 
     public void upgrade(String command) {
-        String[] words = command.split(" ");
+        String[] words = command.split("\\s+");
         String type = words[0];
         if(type.toLowerCase().equals("cat")) {
             Cat cat = player.getMap().getCat();
@@ -310,7 +315,7 @@ public class Controller {
     }
 
     public void produce(String command) {
-        Workshop workshop = player.getMap().getWorkshop(command.split(" ")[0]);
+        Workshop workshop = player.getMap().getWorkshop(command.split("\\s+")[0]);
         if(workshop == null) {
             event.printStatus("No such workshop");
             return;
@@ -365,7 +370,8 @@ public class Controller {
                 }
                 if (animal.getType().equals("Dog"))
                     isDogThere = true;
-                animal.die();
+                if (animal.getId() != wildID)
+                    animal.die();
             }
             if (isDogThere) {
                 str.append(String.format("%s in (%d, %d) died\n", type, loc.x, loc.y));
@@ -375,7 +381,8 @@ public class Controller {
                 }
 
             }
-            event.printStatus(str + player.update(time));
+
         }
+        event.printStatus(str + player.update(time));
     }
 }

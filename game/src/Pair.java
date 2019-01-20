@@ -2,7 +2,7 @@ import org.json.JSONObject;
 
 import java.security.PublicKey;
 
-public class Pair<T1, T2> {
+public class Pair<T1, T2> extends  Object {
     public T1 x = null;
     public T2 y = null;
     public Pair() {
@@ -30,9 +30,15 @@ public class Pair<T1, T2> {
         y = (T2)object.get("y");
     }
 
-    public boolean equals(Pair<T1, T2> p) {
-        return x.equals(p.x) && y.equals(p.y);
+    @Override
+    public boolean equals(Object p) {
+        if(p == null || p.getClass()!= this.getClass())
+            return false;
+        Pair<T1, T2> x;
+        x = (Pair<T1, T2>)p;
+        return this.x.equals(x.x) && this.y.equals(x.y);
     }
+
 
     @Override
     public int hashCode() {

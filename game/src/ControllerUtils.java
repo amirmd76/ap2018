@@ -3,7 +3,7 @@ import java.util.HashMap;
 public class ControllerUtils {
     private HashMap<String, Integer> ids = new HashMap<>();
     public int getID(String s) {
-        if(ids.containsKey(s)) {
+        if(!ids.containsKey(s)) {
             ids.put(s, 2);
             return 1;
         }

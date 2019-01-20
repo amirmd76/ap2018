@@ -10,7 +10,7 @@ public class Cell implements MapCell {
     public Cell() {
         products = new ArrayList<>();
         animals = new ArrayList<>();
-        grass = 0;
+        grass = 9; // TODO: CHANGE TO 0
     }
 
     public String print(int x, int y) {
@@ -139,16 +139,24 @@ public class Cell implements MapCell {
                 items.add(products.get(i));
             }
         if(items.size() == 0)
-            return null;
+            return items;
         return items;
     }
 
-    public ArrayList<Animal> getAnimals_by_Type (String type){
+    public ArrayList<Animal> deleteAnimals_by_Type (String type){
         ArrayList<Animal> animals = getAnimals();
         for (int i = animals.size()-1; i >= 0; i--){
             if (!animals.get(i).getType().equals(type))
                 animals.remove(animals.get(i));
         }
         return animals;
+    }
+
+    public ArrayList<Animal> getAnimals_by_Type (String type){
+        ArrayList<Animal> res = new ArrayList<>();
+        for(Animal animal: animals)
+            if(animal.getType().equals(type))
+                res.add(animal);
+        return res;
     }
 }
