@@ -3,6 +3,7 @@ import java.util.HashMap;
 public class Constants {
     public final static long MAX_TIME_WITHOUT_GRASS_FOR_FARM_ANIMALS = 40;
     public final static int EAT_TIME = 2;
+    final static int MAX_WILDS = 2;
     final static long MAX_TIME_WITHOUT_GRASS_TO_PRODUCE = 10;
 
     final static long WAREHOUSE_INITIAL_CAPACITY = 50;

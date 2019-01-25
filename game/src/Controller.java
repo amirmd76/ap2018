@@ -353,33 +353,41 @@ public class Controller {
         this.time = time;
         StringBuilder str = new StringBuilder();
         if (time % Constants.WILD_ATTACK_TIME == 0) {
-            String type;
-            if ((new Random()).nextBoolean())
-                type = "Lion";
-            else
-                type = "Bear";
-            int wildID = utils.getID("animal");
-            Pair<Long, Long> loc = addAnimalToMap(player.getMap(), new Wild(wildID, type, 0, 0, Constants.WILD_SPEED, 1));
-            event.printStatus(String.format("%s attacked (%d, %d)\n", type.toLowerCase(), loc.x, loc.y));
-            Cell cell = player.getMap().getCell(loc);
-            cell.clearProducts();
-            boolean isDogThere = false;
-            for (Animal animal : cell.getAnimals()) {
-                if (animal.getId() != wildID) {
-                    str.append(String.format("%s in (%d, %d) died\n", animal.getType(), loc.x, loc.y));
-                }
-                if (animal.getType().equals("Dog"))
-                    isDogThere = true;
-                if (animal.getId() != wildID)
-                    animal.die();
-            }
-            if (isDogThere) {
-                str.append(String.format("%s in (%d, %d) died\n", type, loc.x, loc.y));
+            ArrayList<Animal> allAnimals = player.getMap().getAnimals();
+            int wilds = 0;
+            for(Animal animal: allAnimals)
+                if(animal instanceof Wild)
+                    wilds ++;
+            if(wilds < Constants.MAX_WILDS) {
+
+                String type;
+                if ((new Random()).nextBoolean())
+                    type = "Lion";
+                else
+                    type = "Bear";
+                int wildID = utils.getID("animal");
+                Pair<Long, Long> loc = addAnimalToMap(player.getMap(), new Wild(wildID, type, 0, 0, Constants.WILD_SPEED, 1));
+                event.printStatus(String.format("%s attacked (%d, %d)\n", type.toLowerCase(), loc.x, loc.y));
+                Cell cell = player.getMap().getCell(loc);
+                cell.clearProducts();
+                boolean isDogThere = false;
                 for (Animal animal : cell.getAnimals()) {
-                    if (animal.getId() == wildID)
+                    if (animal.getId() != wildID) {
+                        str.append(String.format("%s in (%d, %d) died\n", animal.getType(), loc.x, loc.y));
+                    }
+                    if (animal.getType().equals("Dog"))
+                        isDogThere = true;
+                    if (animal.getId() != wildID)
                         animal.die();
                 }
+                if (isDogThere) {
+                    str.append(String.format("%s in (%d, %d) died\n", type, loc.x, loc.y));
+                    for (Animal animal : cell.getAnimals()) {
+                        if (animal.getId() == wildID)
+                            animal.die();
+                    }
 
+                }
             }
 
         }

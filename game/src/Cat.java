@@ -23,9 +23,9 @@ public class Cat extends Animal implements UpgradeableObject {
             goal = new Pair<>(object.getJSONObject("goal"));
     }
 
-    private void move(GameMap map) {
+    private void move(Map map) {
         setDirection(new Pair<>(0L, 0L));
-        if(goal.equals(getLocation()))
+        if(goal != null && goal.equals(getLocation()))
             goal = null;
         Graph graph = new Graph(map);
         setDirectionTowardsGoal(graph);
@@ -49,6 +49,9 @@ public class Cat extends Animal implements UpgradeableObject {
                 else
                     goal = nearest;
             }
+            else if(direction.x == 0L && direction.y == 0L) {
+                direction = map.getRandomDirection();
+            }
         }
         setDirectionTowardsGoal(graph);
     }
@@ -63,7 +66,7 @@ public class Cat extends Animal implements UpgradeableObject {
         }
     }
 
-    public ArrayList<Product> collect(GameMap map) {
+    public ArrayList<Product> collect(Map map) {
         MapCell cell = map.getCell(getLocation());
         ArrayList<Product> items = cell.getProducts();
         cell.clearProducts();

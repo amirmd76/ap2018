@@ -65,7 +65,7 @@ public class Game {
         runCommand("buy turkey");
         runCommand("buy cow");
         runCommand("buy sheep");
-//        runCommand("buy cat");
+        runCommand("buy cat");
         runCommand("buy dog");
         runCommand("buy dog");
         runCommand("buy dog");

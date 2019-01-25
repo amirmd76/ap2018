@@ -114,6 +114,7 @@ public class Map implements GameMap {
         return w;
     }
     public Cell getCell(int x, int y) {
+        if(!isValidCell(x, y))  return null;
         return cells[x][y];
     }
     public Cell getCell(long x, long y) {
@@ -212,6 +213,10 @@ public class Map implements GameMap {
 
     public boolean isValidCell(Pair<Long, Long> location) {
         return 0 <= location.x && location.x < h && 0 <= location.y && location.y < w;
+    }
+
+    public boolean isValidCell(int x, int y) {
+        return 0 <= x && x < h && 0 <= y && y < w;
     }
 
     public String plantGrass(Pair<Long, Long> location, int count) {

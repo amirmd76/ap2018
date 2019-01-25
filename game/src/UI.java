@@ -20,12 +20,19 @@ public class UI extends JPanel {
     private static final String baseFilesPath = "/home/amirmd76/Codes/projects/ap2018/game/static/";
     private static Graphics bg;
     private Timer timer;
+    private Image coin = null;
 
     private  Game game;
     public UI(Game game, int screenw, int screenh) {
         this.game = game;
         this.screenw = screenw;
         this.screenh = screenh;
+        try {
+            image = ImageIO.read(new File(baseFilesPath + "/coin.png"));
+            coin = image.getScaledInstance(15, 15, Image.SCALE_SMOOTH);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         lastUpdate = System.nanoTime();
         setPreferredSize(new Dimension(screenw, screenh));
         ActionListener animation = new ActionListener() {
@@ -170,6 +177,43 @@ public class UI extends JPanel {
 
     long lastUpdate = 0;
 
+    private void fillCircle(int cx, int cy, int rr) {
+        bg.fillOval(cx - rr/2, cy - rr/2, rr, rr);
+
+    }
+
+    private void paintIcon(String animal, int x, int y) {
+        try {
+            image = ImageIO.read(new File(baseFilesPath + "UI/Icons/Products/" + animal + ".png"));
+            int w = image.getWidth(), h = image.getHeight();
+            int rr = Math.max(w, h), RR = 2 + rr;
+            int cx = x + RR/2, cy = y + RR/2;
+            int X = cx - w/2, Y = cy - h/2;
+            bg.setColor(Color.LIGHT_GRAY);
+            fillCircle(cx, cy, RR);
+            bg.setColor(Color.cyan);
+            fillCircle(cx, cy, rr);
+            bg.fillOval(cx - rr/2, cy - rr/2, rr, rr);
+            bg.drawImage(image, X, Y, null);
+            bg.setColor(new Color(Integer.parseInt("1E90FF", 16)));
+            int badgeX = x, badgeY = y + RR - 5, badgeW = RR, badgeH = 20;
+            bg.fillRect(badgeX, badgeY, badgeW, badgeH);
+            bg.setColor(Color.white);
+            bg.drawString("10", badgeX + 2, badgeY+15);
+            bg.drawImage(coin, badgeX + badgeW - 17, badgeY + badgeH - 17, null);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void paintIcons() {
+        int X = 50, Y = 30, DX = 70;
+        String[] types = {"cat", "dog", "cow", "sheep", "turkey", "chicken"};
+        for(int i = 0; i < types.length; ++ i)
+            paintIcon(types[i], X + DX * i, Y);
+    }
+
     private void paintCells() {
         Map map = game.getCurrentController().player.getMap();
         Pair<Long, Long> dim = map.getDimensions();
@@ -222,8 +266,8 @@ public class UI extends JPanel {
         }
         bg.drawImage(background, 0, 0, null);
 
-        bg.setColor(Color.BLACK);
         paintCells();
+        paintIcons();
 
 
        // bg.drawRect(336, 264, 528, 432);

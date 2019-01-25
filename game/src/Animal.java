@@ -81,7 +81,7 @@ public class Animal {
         Pair<Long, Long> location = new Pair<>((long)this.location.x, (long)this.location.y);
         location.x += direction.x * speed * time;        // Applying changes to x
         location.y += direction.y * speed * time;        // Applying changes to y
-        System.err.println(String.format("VALID CELL %d, %d", direction.x, direction.y));
+//        System.err.println(String.format("VALID CELL %d, %d", direction.x, direction.y));
 
         if(map.isValidCell(location)) {
             this.location = location;
@@ -89,7 +89,7 @@ public class Animal {
         else {
             setDirection(map.getRandomDirection());
         }
-        return String.format("%s%d is now in the location of %d,%d\n", type, id, this.location.x, this.location.y);
+        return String.format("%s%d is now in the location of %d, %d - direction: <%d, %d>\n", type, id, this.location.x, this.location.y, this.direction.x, this.direction.y);
     }
 
     public String die(){
