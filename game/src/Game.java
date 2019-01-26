@@ -1,4 +1,5 @@
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -7,36 +8,46 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Game {
-    ArrayList<Controller> controllers = new ArrayList<>();
-    ArrayList<Level> levels = new ArrayList<>();
-    long time = 0;
-    int currentPlayer = 0;
-    Event event = new Event();
+    static ArrayList<Controller> controllers = new ArrayList<>();
+    static ArrayList<Level> levels = new ArrayList<>();
+    static long time = 0;
+    static int currentPlayer = 0;
+    static Event event = new Event();
 
-    public JSONObject dump() {
+    public static JSONObject dump() {
         JSONObject object = new JSONObject();
-        object.put("time", time);
-//        object.put("levels", levels.toArray());
-        JSONArray array = new JSONArray();
-        for(Controller controller: controllers)
-            array.put(controller.dump());
-        object.put("controllers", array);
-        object.put("currentPlayer", currentPlayer);
-        return object;
+        try {
+            object.put("time", time);
+            //        object.put("levels", levels.toArray());
+            JSONArray array = new JSONArray();
+            for (Controller controller : controllers)
+                array.put(controller.dump());
+            object.put("controllers", array);
+            object.put("currentPlayer", currentPlayer);
+            return object;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
-    public void load(JSONObject object) {
-        time = object.getInt("time");
-        currentPlayer = object.getInt("currentPlayer");
+    public static void load(JSONObject object) {
+        try {
+            time = object.getInt("time");
+            currentPlayer = object.getInt("currentPlayer");
 //        JSONArray array = object.getJSONArray("levels");
 //        for(int i = 0; i < array.length(); ++ i)
 //            levels.add(array.getString(i));
-        JSONArray array = object.getJSONArray("controllers");
-        for(int i = 0; i < array.length(); ++ i)
-            controllers.add(new Controller(array.getJSONObject(i), event));
+            JSONArray array = null;
+            array = object.getJSONArray("controllers");
+            for (int i = 0; i < array.length(); ++i)
+                controllers.add(new Controller(array.getJSONObject(i), event));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void loadGame() throws Exception {
+    public static void loadGame() throws Exception {
         controllers.clear();
         File file = new File(Constants.DUMP_FILE);
         FileInputStream fis = new FileInputStream(file);
@@ -47,7 +58,8 @@ public class Game {
         JSONObject obj = new JSONObject(str);
         load(obj);
     }
-    public void saveGame() throws  Exception{
+
+    public static void saveGame() throws Exception {
         File file = new File(Constants.DUMP_FILE);
         file.createNewFile();
         FileWriter writer = new FileWriter(file);
@@ -60,48 +72,129 @@ public class Game {
     public Game() {
         controllers.add(new Controller(event, "guest"));
         levels.add(new Level());
-//        runCommand("buy chicken"); // TODO: REMOVE
-//        runCommand("buy chicken");
-//        runCommand("buy turkey");
-//        runCommand("buy cow");
-//        runCommand("buy sheep");
-//        runCommand("buy cat");
-//        runCommand("buy dog");
-//        runCommand("buy dog");
-//        runCommand("buy dog");
-//        runCommand("buy dog");
-//        runCommand("buy dog");
-//        runCommand("buy dog");
+    }
 
+    public Controller getCurrentController() {
+        return controllers.get(currentPlayer);
+    }
 
+    public void menu(Menu menu, JFrame frame, NewGame newGame ){
+        String action = null;
+        while (true){
+            String i = menu.getAction();
+            System.out.println(i);
+            if (!i.equals("NoAction")){
+                action = menu.getAction();
+                break;
+            }
+        }
+        int actionCount = 0;
+        String nickName = null;
+        System.out.println(action);
+        switch (action){                //TODO
+            case "New Game":{                   //TODO add a back button
+                frame.getContentPane().removeAll();
+                newGame = new NewGame(400, 300);
+                frame.getContentPane().add(newGame);
+                frame.setResizable(true);
+                frame.pack();
+                actionCount = 1;
+                break;
+            }
+            case "Load Game":{ //TODO handle loading games by Nickname of players(sorted by player ID)
+                break;
+            }
+            case "Options" : {
+                frame.getContentPane().removeAll();
+                //frame.getContentPane().add(option);   TODO handle option
+                frame.setResizable(true);
+                frame.pack();
+                actionCount = 3;
+                break;
+            }
+            case "Create Costume": {        //TODO handle this first on level class
+                break;
+            }
+        }
+        if (actionCount == 1){
+            while (true){
+                System.out.println("While2");
+                if (!newGame.getAction().equals("NoAction"))
+                    break;
+            }
+            nickName = newGame.getNickname();
+            System.out.println(nickName);
+            //TODO add a player with this Nickname and run the game
+        }
 
+            /*if (actionCount == 3){
+                while (true){
+                    System.out.println("while3");
+                    if (!option.getAction().equals("NoAction")){
+                        break;
+                    }
+                    frame.getContentPane().removeAll();
+                    frame.getContentPane().add(menu);
+                    frame.setResizable(true);
+                    frame.pack();
+                }
+            }*/
+    }
+
+    public void inGameMenu(InGameMenu inGameMenu, Menu menu, JFrame frame, NewGame newGame){
+        while (inGameMenu.getAction().equals("NoAction")) {System.out.println("HIII");}
+        System.out.println(inGameMenu.getAction());
+        switch (inGameMenu.getAction()){
+            case "Continue":{
+                frame.getContentPane().remove(inGameMenu);
+                frame.pack();
+                break;
+            }
+            case "Restart": {   //TODO Handling restarting a level
+                break;
+            }
+            case "Return":{
+                frame.getContentPane().removeAll();
+                frame.getContentPane().add(menu);
+                frame.pack();
+                menu(menu, frame, newGame);
+                break;
+            }
+        }
     }
 
     public static void main(String[] args) {
         (new Game()).run();
     }
 
+    public void run(){
+        JFrame frame = new JFrame();
+        Menu menu = new Menu(800, 600);
+        UI ui = new UI(this, 1200, 900);
+        InGameMenu inGameMenu = new InGameMenu();
+        NewGame newGame = new NewGame();
+           /* frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.getContentPane().add(menu);
+            frame.setResizable(false);
+            frame.pack();*/
 
-     public void run() {
-         JFrame frame = new JFrame();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //frame.getContentPane().add(ui);
+        frame.getContentPane().add(inGameMenu);
+        frame.setResizable(false);
+        frame.pack();
 
-         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-         frame.getContentPane().add(new UI(this, 1200, 900));
-         frame.setResizable(false);
-         frame.pack();
+        frame.setLocationByPlatform(true);
+        frame.setVisible(true);
+        boolean b = true;
 
-         frame.setLocationByPlatform(true);
-         frame.setVisible(true);
+        inGameMenu(inGameMenu, menu, frame, newGame);
 
         Scanner sc = new Scanner(System.in);
         while(sc.hasNextLine()) {
             String command = sc.nextLine();
             runCommand(command);
         }
-    }
-
-    public Controller getCurrentController() {
-        return controllers.get(currentPlayer);
     }
 
     public void runCommand(String command) {
