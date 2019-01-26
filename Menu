@@ -1,0 +1,701 @@
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+public class InGameMenu extends JPanel implements ActionListener {
+    int screenw, screenh;
+    private static Image buffer;
+    private static Graphics bg;
+    private String action = "NoAction";
+    private JTextField field;
+    private JTextArea textArea;
+    private String nickname = null;
+
+    public InGameMenu() {
+        super(new GridBagLayout());
+        this.screenw = 250;
+        this.screenh = 405;
+        setPreferredSize(new Dimension(screenw, screenh));
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        buffer = createImage(screenw, screenh);
+        bg = buffer.getGraphics();
+
+        bg.setColor(Color.WHITE);
+        bg.fillRect(0, 0, screenw, screenh);
+
+        BufferedImage image;
+        try {
+            image = ImageIO.read(new File("C://Users//Sina//Desktop//BackGround1.jpg"));
+            bg.drawImage(image, 0, 0, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        g.drawImage(buffer, 0, 0,  null);
+
+        JButton button1 = new JButton("Continue");
+        button1.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        button1.setBounds(50,50,150,50);
+        button1.setVisible(true);
+        button1.setBackground(Color.pink);
+        button1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action = "Continue";
+            }
+        });
+        this.add(button1);
+
+        JButton button2 = new JButton("Restart this level");
+        button2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        button2.setBounds(50,135,150,50);
+        button2.setVisible(true);
+        button2.setBackground(Color.pink);
+        button2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action = "Restart";
+            }
+        });
+        this.add(button2);
+
+        JButton button3 = new JButton("Return to menu");
+        button3.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        button3.setBounds(50,220,150,50);
+        button3.setVisible(true);
+        button3.setBackground(Color.pink);
+        button3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action = "Return";
+            }
+        });
+        this.add(button3);
+
+        JButton button4 = new JButton("Exit");
+        button4.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        button4.setBounds(50,305,150,50);
+        button4.setVisible(true);
+        button4.setBackground(Color.pink);
+        this.add(button4);
+        button4.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                //what do we want to happen when we
+                //click the button
+                int dialogButton = JOptionPane.YES_NO_OPTION;
+                JOptionPane.showConfirmDialog(null, "Do you want to  close", "Warning", dialogButton);
+                if (!(dialogButton == JOptionPane.NO_OPTION)) { //The ISSUE is here
+                    System.exit(0);
+                }
+            }
+        });
+
+        g.drawImage(buffer, 0, 0,  null);
+
+
+
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        this.nickname = field.getText();
+        this.action = "NicknameEntered";
+    }
+}
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.plaf.basic.BasicButtonListener;
+import javax.swing.plaf.basic.BasicButtonUI;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+
+class RoundedCornerButtonUI extends BasicButtonUI {
+    private static final float arcwidth  = 16.0f;
+    private static final float archeight = 16.0f;
+    protected static final int focusstroke = 2;
+    protected final Color fc = new Color(100,150,255,200);
+    protected final Color ac = new Color(230,230,230);
+    protected final Color rc = Color.ORANGE;
+    protected Shape shape;
+    protected Shape border;
+    protected Shape base;
+
+    @Override protected void installDefaults(AbstractButton b) {
+        super.installDefaults(b);
+        b.setContentAreaFilled(false);
+        b.setOpaque(false);
+        b.setBackground(new Color(250, 250, 250));
+        initShape(b);
+    }
+    @Override protected void installListeners(AbstractButton b) {
+        BasicButtonListener listener = new BasicButtonListener(b) {
+            @Override public void mousePressed(MouseEvent e) {
+                AbstractButton b = (AbstractButton) e.getSource();
+                initShape(b);
+                if(shape.contains(e.getX(), e.getY())) {
+                    super.mousePressed(e);
+                }
+            }
+            @Override public void mouseEntered(MouseEvent e) {
+                if(shape.contains(e.getX(), e.getY())) {
+                    super.mouseEntered(e);
+                }
+            }
+            @Override public void mouseMoved(MouseEvent e) {
+                if(shape.contains(e.getX(), e.getY())) {
+                    super.mouseEntered(e);
+                }else{
+                    super.mouseExited(e);
+                }
+            }
+        };
+        if(listener != null) {
+            b.addMouseListener(listener);
+            b.addMouseMotionListener(listener);
+            b.addFocusListener(listener);
+            b.addPropertyChangeListener(listener);
+            b.addChangeListener(listener);
+        }
+    }
+    @Override public void paint(Graphics g, JComponent c) {
+        Graphics2D g2 = (Graphics2D)g;
+        AbstractButton b = (AbstractButton) c;
+        ButtonModel model = b.getModel();
+        initShape(b);
+        //ContentArea
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        if(model.isArmed()) {
+            g2.setColor(ac);
+            g2.fill(shape);
+        }else if(b.isRolloverEnabled() && model.isRollover()) {
+            paintFocusAndRollover(g2, c, rc);
+        }else if(b.hasFocus()) {
+            paintFocusAndRollover(g2, c, fc);
+        }else{
+            g2.setColor(c.getBackground());
+            g2.fill(shape);
+        }
+        //Border
+        g2.setPaint(c.getForeground());
+        g2.draw(shape);
+
+        g2.setColor(c.getBackground());
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_OFF);
+        super.paint(g2, c);
+    }
+    private void initShape(JComponent c) {
+        if(!c.getBounds().equals(base)) {
+            base = c.getBounds();
+            shape = new RoundRectangle2D.Float(0, 0, c.getWidth()-1, c.getHeight()-1,
+                    arcwidth, archeight);
+            border = new RoundRectangle2D.Float(focusstroke, focusstroke,
+                    c.getWidth()-1-focusstroke*2,
+                    c.getHeight()-1-focusstroke*2,
+                    arcwidth, archeight);
+        }
+    }
+    private void paintFocusAndRollover(Graphics2D g2, JComponent c, Color color) {
+        g2.setPaint(new GradientPaint(0, 0, color, c.getWidth()-1, c.getHeight()-1,
+                color.brighter(), true));
+        g2.fill(shape);
+        g2.setColor(c.getBackground());
+        g2.fill(border);
+    }
+}
+
+public class Menu extends JPanel {
+    int screenw, screenh;
+    private static Image buffer;
+    private static Graphics bg;
+    private String action = "NoAction";
+
+    public Menu(int screenw, int screenh) {
+        this.screenw = screenw;
+        this.screenh = screenh;
+        setPreferredSize(new Dimension(screenw, screenh));
+    }
+    public String getAction() {
+        return action;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        buffer = createImage(screenw, screenh);
+        bg = buffer.getGraphics();
+
+        bg.setColor(Color.WHITE);
+        bg.fillRect(0, 0, screenw, screenh);
+
+        BufferedImage image;
+        try {
+            image = ImageIO.read(new File("C://Users//Sina//Desktop//BackGround1.jpg"));
+            Image scaledImage = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
+            bg.drawImage(scaledImage, 0, 0, null);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        JButton button1 = new JButton("New Game");
+        button1.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        button1.setBounds(300,75,200,50); 
+        button1.setVisible(true);
+        button1.setBackground(Color.pink);
+        button1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action = "New Game";
+            }
+        });
+        this.add(button1);
+
+        JButton button2 = new JButton("Load Game");
+        button2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        button2.setBounds(300,175,200,50);
+        button2.setVisible(true);
+        button2.setBackground(Color.pink);
+        button2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action = "Load Game";
+            }
+        });
+        this.add(button2);
+
+        JButton button3 = new JButton("Create Costume");
+        button3.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        button3.setBounds(300,275,200,50);
+        button3.setVisible(true);
+        button3.setBackground(Color.pink);
+        button3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action = "Create Costume";
+            }
+        });
+        this.add(button3);
+
+        JButton button4 = new JButton("Options");
+        button4.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        button4.setBounds(300,375,200,50);
+        button4.setVisible(true);
+        button4.setBackground(Color.pink);
+        button4.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action = "Options";
+            }
+        });
+        this.add(button4);
+
+        JButton button5 = new JButton("Exit");
+        button5.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        button5.setBounds(300,475,200,50);
+        button5.setVisible(true);
+        button5.setBackground(Color.pink);
+        this.add(button5);
+        button5.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                //what do we want to happen when we
+                //click the button
+                int dialogButton = JOptionPane.YES_NO_OPTION;
+                JOptionPane.showConfirmDialog(null, "Do you want to  close", "Warning", dialogButton);
+                if (dialogButton == JOptionPane.YES_OPTION) { //The ISSUE is here
+                    System.exit(0);
+                }
+            }
+        });
+
+        g.drawImage(buffer, 0, 0,  null);
+
+    }
+}
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+public class NewGame extends JPanel implements ActionListener {
+    int screenw, screenh;
+    private static Image buffer;
+    private static Graphics bg;
+    private String action = "NoAction";
+    private JTextField field;
+    private JTextArea textArea;
+    private String nickname = null;
+
+    public NewGame(int screenw, int screenh) {
+        super(new GridBagLayout());
+        this.screenw = screenw;
+        this.screenh = screenh;
+        setPreferredSize(new Dimension(screenw, screenh));
+    }
+    public NewGame() {
+        super(new GridBagLayout());
+        this.screenw = 0;
+        this.screenh = 0;
+        setPreferredSize(new Dimension(screenw, screenh));
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        buffer = createImage(screenw, screenh);
+        bg = buffer.getGraphics();
+
+        bg.setColor(Color.WHITE);
+        bg.fillRect(0, 0, screenw, screenh);
+
+        BufferedImage image;
+        try {
+            image = ImageIO.read(new File("C://Users//Sina//Desktop//BackGround2.jpg"));
+            Image scaled = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
+            bg.drawImage(scaled, 0, 0, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        g.drawImage(buffer, 0, 0,  null);
+
+        JLabel label = new JLabel("Enter your nickname");
+        label.setBounds(90,0,250,100);
+        label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+        add(label);
+        field = new JTextField(10);
+        field.addActionListener(this);
+        field.setBounds(50,100,300,100);
+        field.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 20));
+        add(field);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        this.nickname = field.getText();
+        this.action = "NicknameEntered";
+    }
+}
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import javax.swing.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Game {
+    static ArrayList<Controller> controllers = new ArrayList<>();
+    static ArrayList<Level> levels = new ArrayList<>();
+    static long time = 0;
+    static int currentPlayer = 0;
+    static Event event = new Event();
+
+    public static JSONObject dump() {
+        JSONObject object = new JSONObject();
+        try {
+            object.put("time", time);
+            //        object.put("levels", levels.toArray());
+            JSONArray array = new JSONArray();
+            for (Controller controller : controllers)
+                array.put(controller.dump());
+            object.put("controllers", array);
+            object.put("currentPlayer", currentPlayer);
+            return object;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void load(JSONObject object) {
+        try {
+            time = object.getInt("time");
+            currentPlayer = object.getInt("currentPlayer");
+//        JSONArray array = object.getJSONArray("levels");
+//        for(int i = 0; i < array.length(); ++ i)
+//            levels.add(array.getString(i));
+            JSONArray array = null;
+            array = object.getJSONArray("controllers");
+            for (int i = 0; i < array.length(); ++i)
+                controllers.add(new Controller(array.getJSONObject(i), event));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void loadGame() throws Exception {
+        controllers.clear();
+        File file = new File(Constants.DUMP_FILE);
+        FileInputStream fis = new FileInputStream(file);
+        byte[] data = new byte[(int) file.length()];
+        fis.read(data);
+        fis.close();
+        String str = new String(data, "UTF-8");
+        JSONObject obj = new JSONObject(str);
+        load(obj);
+    }
+
+    public static void saveGame() throws Exception {
+        File file = new File(Constants.DUMP_FILE);
+        file.createNewFile();
+        FileWriter writer = new FileWriter(file);
+        JSONObject obj = dump();
+        obj.write(writer);
+        writer.flush();
+        writer.close();
+    }
+
+    public Game() {
+        controllers.add(new Controller(event, "guest"));
+        levels.add(new Level());
+    }
+
+    public Controller getCurrentController() {
+        return controllers.get(currentPlayer);
+    }
+
+    public void menu(Menu menu, JFrame frame, NewGame newGame ){
+        String action = null;
+            while (true){
+                String i = menu.getAction();
+                System.out.println(i);
+                if (!i.equals("NoAction")){
+                    action = menu.getAction();
+                    break;
+                }
+            }
+            int actionCount = 0;
+            String nickName = null;
+            System.out.println(action);
+            switch (action){                //TODO
+                case "New Game":{                   //TODO add a back button
+                    frame.getContentPane().removeAll();
+                    newGame = new NewGame(400, 300);
+                    frame.getContentPane().add(newGame);
+                    frame.setResizable(true);
+                    frame.pack();
+                    actionCount = 1;
+                    break;
+                }
+                case "Load Game":{ //TODO handle loading games by Nickname of players(sorted by player ID)
+                    break;
+                }
+                case "Options" : {
+                    frame.getContentPane().removeAll();
+                    //frame.getContentPane().add(option);   TODO handle option
+                    frame.setResizable(true);
+                    frame.pack();
+                    actionCount = 3;
+                    break;
+                }
+                case "Create Costume": {        //TODO handle this first on level class
+                    break;
+                }
+            }
+            if (actionCount == 1){
+                while (true){
+                    System.out.println("While2");
+                    if (!newGame.getAction().equals("NoAction"))
+                        break;
+                }
+                nickName = newGame.getNickname();
+                System.out.println(nickName);
+                //TODO add a player with this Nickname and run the game
+            }
+
+            /*if (actionCount == 3){
+                while (true){
+                    System.out.println("while3");
+                    if (!option.getAction().equals("NoAction")){
+                        break;
+                    }
+                    frame.getContentPane().removeAll();
+                    frame.getContentPane().add(menu);
+                    frame.setResizable(true);
+                    frame.pack();
+                }
+            }*/
+    }
+
+    public void inGameMenu(InGameMenu inGameMenu, Menu menu, JFrame frame, NewGame newGame){
+        while (inGameMenu.getAction().equals("NoAction")) {System.out.println("HIII");}
+        System.out.println(inGameMenu.getAction());
+        switch (inGameMenu.getAction()){
+            case "Continue":{
+                frame.getContentPane().remove(inGameMenu);
+                frame.pack();
+                break;
+            }
+            case "Restart": {   //TODO Handling restarting a level
+                break;
+            }
+            case "Return":{
+                frame.getContentPane().removeAll();
+                frame.getContentPane().add(menu);
+                frame.pack();
+                menu(menu, frame, newGame);
+                break;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        (new Game()).run();
+    }
+
+    public void run(){
+        JFrame frame = new JFrame();
+        Menu menu = new Menu(800, 600);
+        UI ui = new UI(this, 1200, 900);
+        InGameMenu inGameMenu = new InGameMenu();
+        NewGame newGame = new NewGame();
+           /* frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.getContentPane().add(menu);
+            frame.setResizable(false);
+            frame.pack();*/
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //frame.getContentPane().add(ui);
+        frame.getContentPane().add(inGameMenu);
+        frame.setResizable(false);
+        frame.pack();
+
+            frame.setLocationByPlatform(true);
+            frame.setVisible(true);
+            boolean b = true;
+
+        inGameMenu(inGameMenu, menu, frame, newGame);
+
+            Scanner sc = new Scanner(System.in);
+            while(sc.hasNextLine()) {
+                String command = sc.nextLine();
+                runCommand(command);
+            }
+    }
+
+    public void runCommand(String command) {
+        String[] words = command.split("\\s+");
+        StringBuilder cmd = new StringBuilder();
+        for(int i = 1; i < words.length; i ++) {
+            cmd.append(words[i]);
+            if(i + 1 < words.length)
+                cmd.append(" ");
+        }
+        Controller controller = controllers.get(currentPlayer);
+        String x = words[0];
+        switch (x) {
+            case "buy":
+                controller.add(cmd.toString());
+                break;
+            case "pickup":
+                controller.pickup(cmd.toString());
+                break;
+            case "cage":
+                controller.cage(cmd.toString());
+                break;
+            case "plant":
+                controller.plant(cmd.toString());
+                break;
+            case "well":
+                controller.well(cmd.toString());
+                break;
+            case "upgrade":
+                controller.upgrade(cmd.toString());
+                break;
+            case "start":
+                controller.produce(cmd.toString());
+                break;
+            case "print":
+                if (words[1].equals("levels")) {
+                    for(Level level : levels)
+                        event.printStatus(level.print());
+                    break;
+                }
+                event.printStatus(controller.print(cmd.toString()));
+                break;
+            case "turn":
+                for(Level level: levels)
+                    if(level.hasReachedGoals(controller))
+                        event.printStatus(String.format("YOU HAVE COMPLETED LEVEL %d !!!!!!!!", level.getLevelID()));
+                controller.turn(cmd.toString());
+                break;
+            case "save":
+                try {
+                    saveGame();
+                    event.printStatus(String.format("Game saved to %s", Constants.DUMP_FILE));
+                }
+                catch (Exception e) {
+                    event.printStatus(e.getMessage());
+                }
+                break;
+            case "load":
+                try {
+                    loadGame();
+                    event.printStatus("Game loaded successfully");
+                }
+                catch (Exception e) {
+                    event.printStatus(e.getMessage());
+                }
+            case "add_player":
+                String playerName = words[1];
+                controllers.add(new Controller(event, playerName));
+                currentPlayer = controllers.size() - 1;
+                event.printStatus("Player " + playerName + " created");
+                break;
+            case "switch_player":
+                playerName = words[1];
+                boolean flag = false;
+                for(int i = 0; i < controllers.size(); ++ i)
+                    if(controllers.get(i).player.getName().equals(playerName)) {
+                        currentPlayer = i;
+                        flag = true;
+                        break;
+                    }
+                if(!flag)
+                    event.printStatus("Player not found");
+                else
+                    event.printStatus("Switched to player " + playerName);
+                break;
+        }
+    }
+}
