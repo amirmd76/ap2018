@@ -3,6 +3,8 @@ import org.json.JSONObject;
 public class Well implements UpgradeableObject {
     private long capacity, storedWater;
     private int level;
+    public int stage = 0;
+    public boolean working = false;
 
     public Well() {
         this.capacity = Constants.Well_Water_Capacity[0];
@@ -35,6 +37,8 @@ public class Well implements UpgradeableObject {
     }
 
     public String reFill(){
+        working = true;
+        stage = 0;
         storedWater = capacity;
         return String.format("Well is full now");
     }

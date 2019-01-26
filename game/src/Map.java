@@ -229,7 +229,7 @@ public class Map implements GameMap {
                 Pair<Long, Long> cur = new Pair<>(x + dx, y + dy);
                 if(!isValidCell(cur))
                     continue;
-                plant(location, count);
+                plant(cur, count);
             }
         return String.format("Planted grass in cell (%d, %d)", x, y);
     }

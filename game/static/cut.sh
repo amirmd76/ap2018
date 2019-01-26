@@ -1,5 +1,10 @@
 #!/bin/bash
 export py="/home/amirmd76/.virtualenvs/py36/bin/python"
+${py} cut.py Service/Well/01.png 4 4
+${py} cut.py Service/Well/02.png 4 4
+${py} cut.py Service/Well/03.png 4 4
+${py} cut.py Service/Well/04.png 4 4
+
 ${py} cut.py Animals/Africa/Cat/down.png 4 6
 ${py} cut.py Animals/Africa/Cat/down_left.png 4 6
 ${py} cut.py Animals/Africa/Cat/left.png 6 4

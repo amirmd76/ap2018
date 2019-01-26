@@ -10,7 +10,7 @@ public class Cell implements MapCell {
     public Cell() {
         products = new ArrayList<>();
         animals = new ArrayList<>();
-        grass = 9; // TODO: CHANGE TO 0
+        grass = 0; // TODO: CHANGE TO 0
     }
 
     public String print(int x, int y) {

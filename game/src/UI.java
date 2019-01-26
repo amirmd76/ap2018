@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -17,12 +19,25 @@ import javax.swing.text.html.ImageView;
 public class UI extends JPanel {
     int screenw, screenh;
     private static Image buffer;
-    private static final String baseFilesPath = "/home/amirmd76/Codes/projects/ap2018/game/static/";
+    private static final String baseFilesPath = "game/static/";
     private static Graphics bg;
     private Timer timer;
     private Image coin = null;
 
     private  Game game;
+
+    private ArrayList<ClickCommand> commands = new ArrayList<>();
+
+    private void click(int x, int y) {
+        for(ClickCommand command: commands)
+            if(command.wasClicked(x, y)) {
+                String cmd = command.getCommand();
+                game.runCommand(cmd);
+                break ;
+            }
+    }
+
+
     public UI(Game game, int screenw, int screenh) {
         this.game = game;
         this.screenw = screenw;
@@ -35,6 +50,25 @@ public class UI extends JPanel {
         }
         lastUpdate = System.nanoTime();
         setPreferredSize(new Dimension(screenw, screenh));
+        addMouseListener(new MouseListener() {
+            public void mouseClicked(MouseEvent e) {
+                int x = e.getX();
+                int y = e.getY();
+                click(x, y);
+            }
+
+            public void mouseEntered(MouseEvent arg0) {
+            }
+
+            public void mouseExited(MouseEvent arg0) {
+            }
+
+            public void mousePressed(MouseEvent arg0) {
+            }
+
+            public void mouseReleased(MouseEvent arg0) {
+            }
+        });
         ActionListener animation = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -190,10 +224,11 @@ public class UI extends JPanel {
             int cx = x + RR/2, cy = y + RR/2;
             int X = cx - w/2, Y = cy - h/2;
             bg.setColor(Color.LIGHT_GRAY);
+            commands.add(new ClickCommand(cx - RR/2, cy - RR/2, RR, RR, "buy " + animal));
             fillCircle(cx, cy, RR);
             bg.setColor(Color.cyan);
             fillCircle(cx, cy, rr);
-            bg.fillOval(cx - rr/2, cy - rr/2, rr, rr);
+//            bg.fillOval(cx - rr/2, cy - rr/2, rr, rr);
             bg.drawImage(image, X, Y, null);
             bg.setColor(new Color(Integer.parseInt("1E90FF", 16)));
             int badgeX = x, badgeY = y + RR - 5, badgeW = RR, badgeH = 20;
@@ -223,6 +258,7 @@ public class UI extends JPanel {
                 Cell cell = map.getCell(i, j);
                 int grass = cell.getGrass() - 1;
                 Pair<Integer, Integer> p = getCellLocation(i, j);
+                commands.add(new ClickCommand(p.x, p.y, 48, 48, String.format("plant %d %d", i, j)));
                 if(grass >= 0) {
                     try {
                         image = ImageIO.read(new File(baseFilesPath + String.format("Grass/grass1/%d.png", grass)));
@@ -241,12 +277,15 @@ public class UI extends JPanel {
 
     BufferedImage background = null;
 
+    int iter = 0;
+
     @Override
     protected void paintComponent(Graphics g) {
         if(game.getCurrentController().player.getMap().updating) {
             System.err.println("UPDATING");
             return;
         }
+        commands.clear();
         long beg = System.nanoTime();
         buffer = createImage(screenw, screenh);
         bg = buffer.getGraphics();
@@ -256,7 +295,7 @@ public class UI extends JPanel {
 //        g.drawImage(buffer, 0, 0, null);
         if(background == null) {
             try {
-                image = ImageIO.read(new File("/home/amirmd76/Codes/projects/ap2018/game/static/back.png"));
+                image = ImageIO.read(new File(baseFilesPath + "back.png"));
                 Image scaledImage = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
                 background = toBufferedImage(scaledImage);
 
@@ -271,15 +310,23 @@ public class UI extends JPanel {
 
 
        // bg.drawRect(336, 264, 528, 432);
-//        try {
-//            image = ImageIO.read(new File("/home/amirmd76/Codes/projects/ap2018/game/static/Service/Well/04.png"));
-//            Image img = image.getSubimage(0, 0, 150, 136);
-//            Image scaledImage = img.getScaledInstance(195, 176,Image.SCALE_SMOOTH);
-//            bg.drawImage(scaledImage, 550, 70, null);
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            Well well = game.getCurrentController().player.getMap().getWell();
+            String level = String.valueOf(well.getLevel());
+            String stage = String.valueOf(well.stage);
+            image = ImageIO.read(new File(baseFilesPath + "/Service/Well/" + level + "/" + stage + ".png"));
+            if(well.working && iter % 2 == 0) {
+                well.stage = (well.stage + 1) % 16;
+                if(well.stage == 0)
+                    well.working = false;
+            }
+            Image scaledImage = image.getScaledInstance(195, 176,Image.SCALE_SMOOTH);
+            commands.add(new ClickCommand(550, 70, scaledImage.getWidth(null), scaledImage.getHeight(null), "well"));
+            bg.drawImage(scaledImage, 550, 70, null);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 //        try {
 //            image = ImageIO.read(new File("/home/amirmd76/Codes/projects/ap2018/game/static/Service/Truck/03.png"));
 //            Image scaledImage = image.getScaledInstance(180, 180,Image.SCALE_SMOOTH);
@@ -332,6 +379,7 @@ public class UI extends JPanel {
 //        }
         g.drawImage(buffer, 0, 0,  null);
         long end = System.nanoTime();
+        iter ++;
 //        if(terminate)
 //            System.exit(0);
 //        System.err.println(String.format("Took %dms", (end-beg)/(long)1e6));

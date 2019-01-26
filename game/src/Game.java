@@ -60,18 +60,18 @@ public class Game {
     public Game() {
         controllers.add(new Controller(event, "guest"));
         levels.add(new Level());
-        runCommand("buy chicken"); // TODO: REMOVE
-        runCommand("buy chicken");
-        runCommand("buy turkey");
-        runCommand("buy cow");
-        runCommand("buy sheep");
-        runCommand("buy cat");
-        runCommand("buy dog");
-        runCommand("buy dog");
-        runCommand("buy dog");
-        runCommand("buy dog");
-        runCommand("buy dog");
-        runCommand("buy dog");
+//        runCommand("buy chicken"); // TODO: REMOVE
+//        runCommand("buy chicken");
+//        runCommand("buy turkey");
+//        runCommand("buy cow");
+//        runCommand("buy sheep");
+//        runCommand("buy cat");
+//        runCommand("buy dog");
+//        runCommand("buy dog");
+//        runCommand("buy dog");
+//        runCommand("buy dog");
+//        runCommand("buy dog");
+//        runCommand("buy dog");
 
 
 
