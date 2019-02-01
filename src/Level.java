@@ -35,20 +35,20 @@ public class Level {
         for (String i : goals.keySet()){
             switch (i){
                 case "money" : { if (Money != goals.get(i)) return false; }
-                case "egg": { if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "milk": { if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "wool": { if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "flour": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "cake": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "eggpowder": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "cookie": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "feather": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "cotton": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "string": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "cloth": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "turkey": {if (controller.player.map.getAnimals_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "cow": {if (controller.player.map.getAnimals_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
-                case "sheep": {if (controller.player.map.getAnimals_by_Type(i).size() != goals.get(i)) reachedGoal = false;}
+                case "egg": { if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "milk": { if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "wool": { if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "flour": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "cake": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "eggPowder": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "cookie": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "feather": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "cotton": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "string": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "cloth": {if (controller.player.map.getProducts_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "turkey": {if (controller.player.map.getAnimals_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "cow": {if (controller.player.map.getAnimals_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
+                case "sheep": {if (controller.player.map.getAnimals_by_Type(i).size() != goals.get(i)) reachedGoal = false; break;}
                 default : { reachedGoal = true;}
             }
         }
