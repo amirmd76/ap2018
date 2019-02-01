@@ -11,7 +11,7 @@ public class Cell implements MapCell {
     public Cell() {
         products = new ArrayList<>();
         animals = new ArrayList<>();
-        grass = 0;
+        grass = 5;
     }
 
     public String print(int x, int y) {

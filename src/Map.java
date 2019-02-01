@@ -14,6 +14,7 @@ public class Map implements GameMap {
     int cat = -1, dog = -1;
     private Well well = new Well();
     ArrayList<Workshop> workshops = new ArrayList<>();
+    public boolean updating = false;
 
     public String print() {
         StringBuilder ans = new StringBuilder(String.format("Map is %d X %d", h, w));
@@ -35,19 +36,18 @@ public class Map implements GameMap {
             object.put("dog", dog);
             object.put("well", well.dump());
             JSONArray array = new JSONArray();
-            for (Workshop workshop : workshops)
+            for(Workshop workshop: workshops)
                 array.put(workshop.dump());
             object.put("workshops", array);
             array = new JSONArray();
-            for (int i = 0; i < h; ++i) {
+            for(int i = 0; i < h; ++ i) {
                 JSONArray row = new JSONArray();
-                for (int j = 0; j < w; ++j)
+                for(int j = 0; j < w; ++ j)
                     row.put(cells[i][j].dump());
                 array.put(row);
             }
             object.put("cells", array);
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
         }
         return object;
@@ -64,7 +64,7 @@ public class Map implements GameMap {
             well = new Well(object.getJSONObject("well"));
             JSONArray array = object.getJSONArray("workshops");
             for(int i = 0; i < array.length(); i++)
-                workshops.add(new Workshop((JSONObject) array.get(i)));
+                workshops.add(new Workshop((JSONObject)array.get(i)));
             array = object.getJSONArray("cells");
             cells = new Cell[(int)h][];
             for(int i = 0; i < h; ++ i) {
@@ -254,7 +254,7 @@ public class Map implements GameMap {
 
     public String plant(Pair<Long, Long> location, int count) {
         Cell cell = getCell(location);
-        cell.setGrass(cell.getGrass() + count);
+        cell.setGrass(Math.min(cell.getGrass() + count, 16));
         return String.format("planted %d units of grass in cell %d, %d", count, location.x, location.y);
     }
 
@@ -294,6 +294,17 @@ public class Map implements GameMap {
         return str.toString();
     }
 
+    public Pair<Long, Long> getRandomDirection() {
+        Random rand = new Random();
+        int x = rand.nextInt(3);
+        int y = rand.nextInt(3);
+        while(x == 1 && y == 1) {
+            x = rand.nextInt(3);
+            y = rand.nextInt(3);
+        }
+        return new Pair<>(x-1L, y-1L);
+    }
+
     public Pair<Long, Long> getRandomCell() {
         Random rand = new Random();
         Long x = (long)rand.nextInt((int) h),
@@ -326,6 +337,7 @@ public class Map implements GameMap {
     }
 
     public String update(int time) {
+        updating = true;
         int prvTime = this.time;
         if (prvTime == -1)
             prvTime = time;
@@ -334,7 +346,18 @@ public class Map implements GameMap {
         ArrayList<Animal> animals = new ArrayList<>();
         for (int i = 0; i < h; ++i)
             for (int j = 0; j < w; ++j) {
+                boolean wildThere = false, dogThere = false;
+                for(Animal animal: cells[i][j].getAnimals()) {
+                    if(animal instanceof Wild)
+                        wildThere = true;
+                    if(animal instanceof Dog)
+                        dogThere = true;
+                }
                 for (Animal animal : cells[i][j].getAnimals()) {
+                    if(animal instanceof Wild && dogThere)
+                        animal.die();
+                    if(wildThere && !(animal instanceof Wild))
+                        animal.die();
                     animal.setLocation(new Pair<>((long) i, (long) j));
                     if(animal.isAlive()) {
                         if(cells[i][j].getGrass() > 0 && animal instanceof FarmAnimal && time - ((FarmAnimal) animal).lastTimeAte >=
@@ -359,6 +382,8 @@ public class Map implements GameMap {
                 }
                 cells[i][j].clearAnimals();
             }
+//        System.err.println("HERE");
+//        System.err.println(animals.size());
         for (Animal animal : animals) {
             if (animal.getType().equals("Cat")) {
                 ArrayList<Product> products = ((Cat) animal).collect(this);
@@ -376,15 +401,18 @@ public class Map implements GameMap {
                 continue;
             }
             if (!(animal instanceof Wild) || !((Wild) animal).isPrisoned())
-                str.append(animal.walk(time - prvTime));
+                str.append(animal.walk(this, time - prvTime));
+//            System.err.println("ANIMAL!!!");
             getCell(animal.getLocation()).addAnimal(animal);
+//            System.err.println(getCell(animal.getLocation()).getAnimals().size());
         }
+
 
         ArrayList<Product> products = new ArrayList<>();
         for (int i = 0; i < h; ++i)
             for (int j = 0; j < w; ++j) {
                 products.addAll(cells[i][j].getProducts());
-                cells[i][j].clearAnimals();
+                cells[i][j].clearProducts();
             }
         for(Product product: products) {
             if (time - product.getCreationTime() < Constants.PRODUCT_DYING_TIME)
@@ -393,6 +421,7 @@ public class Map implements GameMap {
                 str.append(String.format("Product %s removed from (%d, %d)\n", product.getType(), product.getLocation().x,
                         product.getLocation().y));
         }
+        updating = false;
         return str.toString();
     }
 

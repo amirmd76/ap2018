@@ -11,6 +11,7 @@ public class Animal {
     protected int id;             // ID is for finding this specific animal
     protected int SUF;            // Speed Upgrade Factor
     //TODO handle SUf for each animal in constants
+    public int stage = 0;
 
     public Animal(int ID, long x, long y, int speed, String type, int SUF) {
         location = new Pair<>(x, y);
@@ -73,6 +74,8 @@ public class Animal {
     public int getLevel() { return level; }
 
     public void setDirection(Pair<Long, Long> direction) {
+        if(this.direction == null || !this.direction.equals(direction))
+            stage = 0;
         this.direction = direction;
     }
 
@@ -80,12 +83,22 @@ public class Animal {
         this.location = location;
     }
 
-    public String walk(long time){          // direction is  a vector [dx,dy]
+    public String walk(Map map, long time){          // direction is  a vector [dx,dy]
         if(time == 0)
             return "";
+        speed = 1;
+        Pair<Long, Long> location = new Pair<>((long)this.location.x, (long)this.location.y);
         location.x += direction.x * speed * time;        // Applying changes to x
         location.y += direction.y * speed * time;        // Applying changes to y
-        return String.format("%s%d is now in the location of %d,%d\n", type, id, location.x, location.y);
+        System.err.println(String.format("VALID CELL %d, %d", direction.x, direction.y));
+
+        if(map.isValidCell(location)) {
+            this.location = location;
+        }
+        else {
+            setDirection(map.getRandomDirection());
+        }
+        return String.format("%s%d is now in the location of %d,%d\n", type, id, this.location.x, this.location.y);
     }
 
     public String die(){
