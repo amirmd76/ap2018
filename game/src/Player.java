@@ -2,9 +2,17 @@ import org.json.JSONObject;
 
 public class Player implements GamePlayer {
     Account account;
-    String playerName, Directory = "";
+    String playerName, Directory = "", nameID = "";
     Map map;
     int time = 0;
+
+    public String getNameID() {
+        return nameID;
+    }
+
+    public void setNameID(String nameID) {
+        this.nameID = nameID;
+    }
 
     public Player(String playerName) {
         this.account = new Account(Constants.Initial_Player_Money);
