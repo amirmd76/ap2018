@@ -179,8 +179,8 @@ public class Game {
             frame.pack();*/
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //frame.getContentPane().add(ui);
-        frame.getContentPane().add(inGameMenu);
+        frame.getContentPane().add(ui);
+//        frame.getContentPane().add(inGameMenu);
         frame.setResizable(false);
         frame.pack();
 
