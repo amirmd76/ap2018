@@ -17,7 +17,7 @@ import javax.imageio.ImageIO;
 import javax.swing.text.html.ImageView;
 
 public class UI extends JPanel {
-    int screenw, screenh;
+    int screenw, screenh, gameWidth, gameHeight, sbMargin;
     private static Image buffer;
     private static final String baseFilesPath = "game/static/";
     private static Graphics bg;
@@ -25,14 +25,23 @@ public class UI extends JPanel {
     private Image coin = null;
 
     private  Game game;
+    JButton sendButton, pvSendButton, closePVButton;
+    JTextArea textArea, pvTextArea;
 
     private ArrayList<ClickCommand> commands = new ArrayList<>();
+
 
     private void click(int x, int y) {
         for(ClickCommand command: commands)
             if(command.wasClicked(x, y)) {
                 String cmd = command.getCommand();
-                game.runCommand(cmd);
+                if(command.getType().equals("prv")) {
+                    String id = cmd;
+                    openPV(id);
+                }
+                else {
+                    game.runCommand(cmd);
+                }
                 break ;
             }
     }
@@ -40,8 +49,26 @@ public class UI extends JPanel {
 
     public UI(Game game, int screenw, int screenh) {
         this.game = game;
-        this.screenw = screenw;
+        this.gameWidth = screenw;
+        this.gameHeight = screenh;
+        this.sbMargin = screenh/2;
+        this.screenw = screenw + 500;
         this.screenh = screenh;
+        textArea = new JTextArea(1, 1);
+        pvTextArea = new JTextArea(1, 1);
+        sendButton = new JButton("Send");
+        closePVButton = new JButton("X");
+        pvSendButton = new JButton("Send private message");
+
+        add(textArea);
+        add(sendButton);
+
+        add(pvTextArea);
+        add(pvSendButton);
+        add(closePVButton);
+        pvSendButton.setVisible(false);
+        pvTextArea.setVisible(false);
+        closePVButton.setVisible(false);
         try {
             image = ImageIO.read(new File(baseFilesPath + "/coin.png"));
             coin = image.getScaledInstance(15, 15, Image.SCALE_SMOOTH);
@@ -49,8 +76,32 @@ public class UI extends JPanel {
             e.printStackTrace();
         }
         lastUpdate = System.nanoTime();
-        setPreferredSize(new Dimension(screenw, screenh));
-        addMouseListener(new MouseListener() {
+        setPreferredSize(new Dimension(this.screenw, this.screenh));
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String text = textArea.getText().trim();
+                if(text.isEmpty())  return;
+                textArea.setText("");
+                textArea.grabFocus();
+            }
+        });
+        pvSendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String text = pvTextArea.getText().trim();
+                if(text.isEmpty())  return;
+                pvTextArea.setText("");
+                pvTextArea.grabFocus();
+            }
+        });
+        closePVButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                closePV();
+            }
+        });
+                addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent e) {
                 int x = e.getX();
                 int y = e.getY();
@@ -136,6 +187,7 @@ public class UI extends JPanel {
         }
         return imageAltered;
     }
+
 
     private static BufferedImage colorImage(Image image) {
         return colorImage(toBufferedImage(image));
@@ -249,6 +301,122 @@ public class UI extends JPanel {
             paintIcon(types[i], X + DX * i, Y);
     }
 
+
+    private void drawNames() {
+        if(inPV != null) {
+            drawPrivateChat();
+            return;
+        }
+        bg.setColor(Color.RED);
+        Font font = new Font("Arial", Font.PLAIN, 15);
+        FontMetrics fontMetrics = bg.getFontMetrics(font);
+        bg.setFont(font);
+        int mx = gameWidth + 10, imx = mx;
+        int W = screenw - gameWidth;
+        int my = 20, imy = my;
+        int state = 0;
+        for(int i = 0 ; i < 300; ++ i) {
+            if(my >= sbMargin && state == 1)  break;
+            if(my >= sbMargin) {
+                state = 1;
+                mx += W/2 + 3;
+                my = imy;
+            }
+            String s = "Uncle Johnny";
+            String id = String.valueOf(i);
+            int cw = fontMetrics.stringWidth(s), ch = fontMetrics.getHeight();
+            commands.add(new ClickCommand(mx, my-ch, cw, ch, id, "prv" ));
+            bg.drawString(s, mx, my);
+            my += 20;
+        }
+        bg.setColor(Color.black);
+        bg.drawLine(gameWidth + W/2, 0, gameWidth + W/2, sbMargin);
+        bg.drawLine(gameWidth, sbMargin, screenw, sbMargin);
+    }
+
+    public String inPV = null;
+
+    private void openPV(String id) {
+        pvTextArea.setVisible(true);
+        pvSendButton.setVisible(true);
+        closePVButton.setVisible(true);
+        inPV = id;
+    }
+
+    private void closePV() {
+        pvSendButton.setVisible(false);
+        pvTextArea.setVisible(false);
+        closePVButton.setVisible(false);
+        inPV = null;
+    }
+
+    private void drawPrivateChat() {
+        int sz = 30;
+
+        Font font = new Font("Arial", Font.PLAIN, 15);
+        bg.setFont(font);
+        FontMetrics fontMetrics = bg.getFontMetrics(font);
+        int mx = gameWidth + 10;
+        int my = sbMargin-2*sz-8;
+
+        for(int i = 0 ; i < 300; ++ i) {
+            String name = "johnny " + inPV;
+            String msg = "hello fuckers";
+            if(my - fontMetrics.getHeight() <= 20)  break;
+            String x = name + ": ";
+            String y = msg;
+            int cw = fontMetrics.stringWidth(x);
+            bg.setColor(Color.RED);
+            bg.drawString(x, mx, my);
+            bg.setColor(Color.black);
+            bg.drawString(y, mx + cw, my);
+            my -= 20;
+        }
+
+        bg.setColor(Color.black);
+        bg.drawLine(gameWidth, sbMargin, screenw, sbMargin);
+        pvTextArea.setSize(screenw-gameWidth, sz);
+        bg.drawLine(gameWidth, sbMargin-2*sz-2, screenw, sbMargin-2*sz-2);
+        pvTextArea.setLocation(gameWidth+2, sbMargin-2*sz);
+        pvSendButton.setSize(screenw-gameWidth, sz);
+        pvSendButton.setLocation(gameWidth, sbMargin-sz);
+        closePVButton.setFont(new Font("Arial", Font.PLAIN, 10));
+        closePVButton.setSize(40, 40);
+        closePVButton.setLocation(screenw-50, 2);
+    }
+
+
+    private void drawGroupChat() {
+        int sz = 30;
+
+        Font font = new Font("Arial", Font.PLAIN, 15);
+        bg.setFont(font);
+        FontMetrics fontMetrics = bg.getFontMetrics(font);
+        int mx = gameWidth + 10;
+        int my = gameHeight-2*sz-8;
+
+        for(int i = 0 ; i < 300; ++ i) {
+            String name = "johnny";
+            String msg = "hello fuckers";
+            if(my - fontMetrics.getHeight() <= sbMargin)  break;
+            String x = name + ": ";
+            String y = msg;
+            int cw = fontMetrics.stringWidth(x);
+            bg.setColor(Color.RED);
+            bg.drawString(x, mx, my);
+            bg.setColor(Color.black);
+            bg.drawString(y, mx + cw, my);
+            my -= 20;
+        }
+
+        bg.setColor(Color.black);
+        bg.drawLine(gameWidth, gameHeight-2*sz-2, screenw, gameHeight-2*sz-2);
+        textArea.setSize(screenw-gameWidth, sz);
+        textArea.setLocation(gameWidth+2, gameHeight-2*sz);
+        sendButton.setSize(screenw-gameWidth, sz);
+        sendButton.setLocation(gameWidth, gameHeight-sz);
+    }
+
     private void paintCells() {
         Map map = game.getCurrentController().player.getMap();
         Pair<Long, Long> dim = map.getDimensions();
@@ -275,7 +443,7 @@ public class UI extends JPanel {
             }
     }
 
-    BufferedImage background = null;
+    BufferedImage background = null, chatBack = null;
 
     int iter = 0;
 
@@ -291,12 +459,12 @@ public class UI extends JPanel {
         bg = buffer.getGraphics();
 
         bg.setColor(Color.WHITE);
-        bg.fillRect(0, 0, screenw, screenh); //black background
+        bg.fillRect(0, 0, screenw, screenh); //white background
 //        g.drawImage(buffer, 0, 0, null);
         if(background == null) {
             try {
                 image = ImageIO.read(new File(baseFilesPath + "back.png"));
-                Image scaledImage = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
+                Image scaledImage = image.getScaledInstance(gameWidth, gameHeight, Image.SCALE_SMOOTH);
                 background = toBufferedImage(scaledImage);
 
             } catch (IOException e) {
@@ -304,6 +472,18 @@ public class UI extends JPanel {
             }
         }
         bg.drawImage(background, 0, 0, null);
+        if(chatBack == null) {
+            try {
+                image = ImageIO.read(new File(baseFilesPath + "chatback2.jpg"));
+                Image img = image.getSubimage(0, 0, screenw-gameWidth, screenh);
+                chatBack = toBufferedImage(img);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        bg.drawImage(chatBack, gameWidth, 0, null);
+
 
         paintCells();
         paintIcons();
@@ -377,6 +557,8 @@ public class UI extends JPanel {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
+        drawNames();
+        drawGroupChat();
         g.drawImage(buffer, 0, 0,  null);
         long end = System.nanoTime();
         iter ++;
