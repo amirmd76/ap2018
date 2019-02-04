@@ -5,7 +5,9 @@ import org.json.JSONObject;
 import javax.swing.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class Game {
     static ArrayList<Controller> controllers = new ArrayList<>();
@@ -13,6 +15,19 @@ public class Game {
     static long time = 0;
     static int currentPlayer = 0;
     static Event event = new Event();
+    static Thread server;
+    static Thread client;
+    static Shop shop = new Shop();
+    private HashMap<String, Long> boughtItems = new HashMap<>();
+    private HashMap<String, Long> soldItems = new HashMap<>();
+    public ArrayList<String> commands = new ArrayList<>();
+    private String IDERROR = null, friendNotification = null;
+    public HashMap<String, Player> connectedPlayers = new HashMap<>();
+    public ArrayList<String> chatRoom = new ArrayList<>();
+    public ArrayList<String> privateChat = new ArrayList<>();
+    public ArrayList<String> textInput = new ArrayList<>();
+    public ArrayList<String> privateTextInput = new ArrayList<>();
+    public boolean isMultiPlayer = false;
 
     public static JSONObject dump() {
         JSONObject object = new JSONObject();
@@ -78,14 +93,20 @@ public class Game {
         return controllers.get(currentPlayer);
     }
 
-    public void menu(Menu menu, JFrame frame, NewGame newGame ){
+    public void menu(Menu menu, JFrame frame, NewGame newGame, UI ui ){
         String action = null;
+        MultiPlayer multiPlayer = null;
+        HostStart hostStart = null;
+        ClientStart clientStart = null;
         while (true){
-            String i = menu.getAction();
-            System.out.println(i);
-            if (!i.equals("NoAction")){
+            if (!menu.getAction().equals("NoAction")){
                 action = menu.getAction();
                 break;
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         int actionCount = 0;
@@ -104,45 +125,99 @@ public class Game {
             case "Load Game":{ //TODO handle loading games by Nickname of players(sorted by player ID)
                 break;
             }
-            case "Options" : {
+            case "MultiPlayer": {        //TODO handle this first on level class
                 frame.getContentPane().removeAll();
-                //frame.getContentPane().add(option);   TODO handle option
+                isMultiPlayer = true;
+                multiPlayer= new MultiPlayer(800, 600);
+                frame.getContentPane().add(multiPlayer);
                 frame.setResizable(true);
                 frame.pack();
-                actionCount = 3;
-                break;
-            }
-            case "Create Costume": {        //TODO handle this first on level class
+                actionCount = 4;
                 break;
             }
         }
         if (actionCount == 1){
             while (true){
-                System.out.println("While2");
+                //System.out.println("While2");
                 if (!newGame.getAction().equals("NoAction"))
                     break;
+                try {
+                    TimeUnit.MILLISECONDS.sleep(10L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             nickName = newGame.getNickname();
             System.out.println(nickName);
-            //TODO add a player with this Nickname and run the game
+            controllers.get(currentPlayer).player.setNameID(nickName);
+            frame.getContentPane().removeAll();
+            frame.getContentPane().add(ui);
+            frame.pack();
         }
 
-            /*if (actionCount == 3){
-                while (true){
-                    System.out.println("while3");
-                    if (!option.getAction().equals("NoAction")){
-                        break;
-                    }
-                    frame.getContentPane().removeAll();
-                    frame.getContentPane().add(menu);
-                    frame.setResizable(true);
-                    frame.pack();
+        if (actionCount == 4){
+            while (true){
+                if (!multiPlayer.getAction().equals("NoAction"))
+                    break;
+                try {
+                    TimeUnit.MILLISECONDS.sleep(10L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            }*/
+            }
+            String cmd = multiPlayer.getAction();
+            switch (cmd){
+                case "Host":{
+                    frame.getContentPane().removeAll();
+                    hostStart = new HostStart(400, 300);
+                    frame.getContentPane().add(hostStart);
+                    frame.pack();
+                    while(true){
+                        if(!hostStart.getAction().equals("NoAction")){
+                            break;
+                        }
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    server = new Thread(new Server(hostStart.getPort(), shop, connectedPlayers, chatRoom, commands, privateChat, textInput, privateTextInput));
+                    server.start();
+                    break;
+                }
+                case "Client":{
+                    frame.getContentPane().removeAll();
+                    clientStart = new ClientStart(400, 500);
+                    frame.getContentPane().add(clientStart);
+                    frame.pack();
+                    while(true){
+                        if(!clientStart.getAction().equals("NoAction")){
+                            break;
+                        }
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    client = new Thread(new Client(clientStart.getPort(), clientStart.getIP(), controllers.get(currentPlayer).player, commands, shop, boughtItems, soldItems, IDERROR, friendNotification, connectedPlayers, chatRoom, privateChat, textInput, privateTextInput));
+                    client.start();
+                    break;
+                }
+            }
+        }
+
     }
 
-    public void inGameMenu(InGameMenu inGameMenu, Menu menu, JFrame frame, NewGame newGame){
-        while (inGameMenu.getAction().equals("NoAction")) {System.out.println("HIII");}
+    public void inGameMenu(InGameMenu inGameMenu, Menu menu, JFrame frame, NewGame newGame, UI ui){
+        while (inGameMenu.getAction().equals("NoAction")) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         System.out.println(inGameMenu.getAction());
         switch (inGameMenu.getAction()){
             case "Continue":{
@@ -157,7 +232,7 @@ public class Game {
                 frame.getContentPane().removeAll();
                 frame.getContentPane().add(menu);
                 frame.pack();
-                menu(menu, frame, newGame);
+                menu(menu, frame, newGame, ui);
                 break;
             }
         }
@@ -179,16 +254,16 @@ public class Game {
             frame.pack();*/
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(ui);
-//        frame.getContentPane().add(inGameMenu);
+        frame.getContentPane().add(menu);
+        //frame.getContentPane().add(inGameMenu);
         frame.setResizable(false);
         frame.pack();
-
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
         boolean b = true;
 
-        inGameMenu(inGameMenu, menu, frame, newGame);
+        menu(menu, frame, newGame, ui);
+
 
         Scanner sc = new Scanner(System.in);
         while(sc.hasNextLine()) {

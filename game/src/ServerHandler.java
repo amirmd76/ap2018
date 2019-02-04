@@ -15,19 +15,19 @@ public class ServerHandler implements Runnable, Serializable {
     private HashMap<String, Player> connectedPlayers;
     private Player currentPlayer;
     private Semaphore semaphore;
-    private File chatFile;
+    private ArrayList<String> chatRoom;
     private Shop shop;
     private ArrayList<String> command;
     ArrayList<String> textInputs = new ArrayList<>();
     private File saveFile = new File("save");
 
 
-    public ServerHandler(int port, Socket socket, Shop shop, String IP, File file, HashMap<String, Player> connectedPlayers, Player currentPlayer, ArrayList<String> cmd) {
+    public ServerHandler(int port, Socket socket, Shop shop, String IP, HashMap<String, Player> connectedPlayers, Player currentPlayer, ArrayList<String> cmd, ArrayList<String> chatRoom) {
         this.port = port;
         this.IP = IP;
         this.socket = socket;
         this.semaphore = new Semaphore(0);
-        this.chatFile = file;
+        this.chatRoom = chatRoom;
         this.shop = shop;
         this.connectedPlayers = connectedPlayers;
         this.currentPlayer = currentPlayer;
@@ -58,7 +58,16 @@ public class ServerHandler implements Runnable, Serializable {
                 e.printStackTrace();
             }
         }
+    }
 
+    public void sendConnectedPLayers(){
+        try {
+            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+            outputStream.writeObject(connectedPlayers);
+            outputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendShop(){
@@ -66,6 +75,7 @@ public class ServerHandler implements Runnable, Serializable {
             try {
                 ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
                 outputStream.writeObject(shop);
+                outputStream.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -113,8 +123,8 @@ public class ServerHandler implements Runnable, Serializable {
     @Override
     public void run() {
         synchronized (socket) {
-            Thread reader = new Thread(new Reader(socket, chatFile, semaphore, true));
-            Thread writer = new Thread(new Writer(socket, chatFile, textInputs, true, semaphore));
+            Thread reader = new Thread(new Reader(socket, chatRoom, semaphore, true));
+            Thread writer = new Thread(new Writer(socket, chatRoom, textInputs, true, semaphore));
             try {
                 InputStream inputStream = socket.getInputStream();
                 OutputStream outputStream = socket.getOutputStream();
@@ -128,6 +138,8 @@ public class ServerHandler implements Runnable, Serializable {
                             nameID = getPlayer();
                             formatter.format("playerReceived");
                             formatter.flush();
+                            sendConnectedPLayers();
+                            do{}while(scanner.nextLine().equals("received"));
                             break;
                         }
                         case "chat": {

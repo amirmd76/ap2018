@@ -9,15 +9,15 @@ import java.util.concurrent.Semaphore;
 public class Writer implements Runnable {
 
     private Socket socket;
-    private File file;
     private boolean run;
     private Semaphore semaphore;
     ArrayList<String> textInputs;
+    ArrayList<String> chatRoom;
 
 
-    public Writer(Socket socket, File file, ArrayList<String> txt, boolean run, Semaphore semaphore) {
+    public Writer(Socket socket, ArrayList<String> chatRoom, ArrayList<String> txt, boolean run, Semaphore semaphore) {
         this.socket = socket;
-        this.file = file;
+        this.chatRoom = chatRoom;
         this.textInputs = txt;
         this.run = run;
         this.semaphore = semaphore;
@@ -42,7 +42,6 @@ public class Writer implements Runnable {
             try {
                 OutputStream outputStream = socket.getOutputStream();
                 Formatter formatter = new Formatter(outputStream);
-                Formatter fileFormatter = new Formatter(file);
                 while (run) {
                     semaphore.acquire();
                     String str = textInputs.get(0);
@@ -50,9 +49,10 @@ public class Writer implements Runnable {
                     formatter.format("chat" + "\n");
                     formatter.flush();
                     formatter.format(str);
-                    fileFormatter.format("\n" + str);
+                    synchronized (chatRoom) {
+                        chatRoom.add(str);
+                    }
                     formatter.flush();
-                    fileFormatter.flush();
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block

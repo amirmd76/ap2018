@@ -1,4 +1,3 @@
-import com.sun.scenario.effect.ColorAdjust;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,12 +8,10 @@ import java.awt.event.MouseListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
-import javax.swing.text.html.ImageView;
 
 public class UI extends JPanel {
     int screenw, screenh, gameWidth, gameHeight, sbMargin;
@@ -23,6 +20,7 @@ public class UI extends JPanel {
     private static Graphics bg;
     private Timer timer;
     private Image coin = null;
+    private boolean isMultiPlayer = true;
 
     private  Game game;
     JButton sendButton, pvSendButton, closePVButton;
@@ -48,27 +46,65 @@ public class UI extends JPanel {
 
 
     public UI(Game game, int screenw, int screenh) {
+        this.isMultiPlayer = game.isMultiPlayer;
         this.game = game;
         this.gameWidth = screenw;
         this.gameHeight = screenh;
         this.sbMargin = screenh/2;
-        this.screenw = screenw + 500;
+        if(isMultiPlayer)
+            this.screenw = screenw + 500;
+        else
+            this.screenw = screenw;
         this.screenh = screenh;
-        textArea = new JTextArea(1, 1);
-        pvTextArea = new JTextArea(1, 1);
-        sendButton = new JButton("Send");
-        closePVButton = new JButton("X");
-        pvSendButton = new JButton("Send private message");
 
-        add(textArea);
-        add(sendButton);
+        if(isMultiPlayer) {
+            textArea = new JTextArea(1, 1);
+            pvTextArea = new JTextArea(1, 1);
+            sendButton = new JButton("Send");
+            closePVButton = new JButton("X");
+            pvSendButton = new JButton("Send private message");
 
-        add(pvTextArea);
-        add(pvSendButton);
-        add(closePVButton);
-        pvSendButton.setVisible(false);
-        pvTextArea.setVisible(false);
-        closePVButton.setVisible(false);
+            add(textArea);
+            add(sendButton);
+
+            add(pvTextArea);
+            add(pvSendButton);
+            add(closePVButton);
+            pvSendButton.setVisible(false);
+            pvTextArea.setVisible(false);
+            closePVButton.setVisible(false);
+            sendButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String text = textArea.getText().trim();
+                    if(text.isEmpty())  return;
+                    textArea.setText("");
+                    textArea.grabFocus();
+                    String msg = game.getCurrentController().player.getNameID() + ": " + text;
+                    game.commands.add("chat");
+                    game.textInput.add(msg);
+                }
+            });
+            pvSendButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String text = pvTextArea.getText().trim();
+                    if(text.isEmpty())  return;
+                    pvTextArea.setText("");
+                    pvTextArea.grabFocus();
+                    String msg = game.getCurrentController().player.getNameID() + ": " + text;
+                    game.commands.add("privateChat");
+                    game.commands.add(inPV);
+                    game.privateTextInput.add(msg);
+                }
+            });
+            closePVButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    closePV();
+                }
+            });
+        }
         try {
             image = ImageIO.read(new File(baseFilesPath + "/coin.png"));
             coin = image.getScaledInstance(15, 15, Image.SCALE_SMOOTH);
@@ -77,30 +113,6 @@ public class UI extends JPanel {
         }
         lastUpdate = System.nanoTime();
         setPreferredSize(new Dimension(this.screenw, this.screenh));
-        sendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String text = textArea.getText().trim();
-                if(text.isEmpty())  return;
-                textArea.setText("");
-                textArea.grabFocus();
-            }
-        });
-        pvSendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String text = pvTextArea.getText().trim();
-                if(text.isEmpty())  return;
-                pvTextArea.setText("");
-                pvTextArea.grabFocus();
-            }
-        });
-        closePVButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                closePV();
-            }
-        });
                 addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent e) {
                 int x = e.getX();
@@ -315,15 +327,14 @@ public class UI extends JPanel {
         int W = screenw - gameWidth;
         int my = 20, imy = my;
         int state = 0;
-        for(int i = 0 ; i < 300; ++ i) {
+        for(String id: game.connectedPlayers.keySet()) {
             if(my >= sbMargin && state == 1)  break;
             if(my >= sbMargin) {
                 state = 1;
                 mx += W/2 + 3;
                 my = imy;
             }
-            String s = "Uncle Johnny";
-            String id = String.valueOf(i);
+            String s = game.connectedPlayers.get(id).getName();
             int cw = fontMetrics.stringWidth(s), ch = fontMetrics.getHeight();
             commands.add(new ClickCommand(mx, my-ch, cw, ch, id, "prv" ));
             bg.drawString(s, mx, my);
@@ -347,6 +358,7 @@ public class UI extends JPanel {
         pvSendButton.setVisible(false);
         pvTextArea.setVisible(false);
         closePVButton.setVisible(false);
+        game.privateChat.clear();
         inPV = null;
     }
 
@@ -359,10 +371,13 @@ public class UI extends JPanel {
         int mx = gameWidth + 10;
         int my = sbMargin-2*sz-8;
 
-        for(int i = 0 ; i < 300; ++ i) {
-            String name = "johnny " + inPV;
-            String msg = "hello fuckers";
+        for(int i = game.privateChat.size(); i >= 0; -- i){
             if(my - fontMetrics.getHeight() <= 20)  break;
+            String rawMsg = game.chatRoom.get(i);
+            int colon = rawMsg.indexOf(':');
+            String id = rawMsg.substring(0, colon).trim();
+            String msg = rawMsg.substring(colon+1).trim();
+            String name = game.connectedPlayers.get(id).getName();
             String x = name + ": ";
             String y = msg;
             int cw = fontMetrics.stringWidth(x);
@@ -395,9 +410,12 @@ public class UI extends JPanel {
         int mx = gameWidth + 10;
         int my = gameHeight-2*sz-8;
 
-        for(int i = 0 ; i < 300; ++ i) {
-            String name = "johnny";
-            String msg = "hello fuckers";
+        for(int i = game.chatRoom.size() - 1; i >= 0; --i) {
+            String rawMsg = game.chatRoom.get(i);
+            int colon = rawMsg.indexOf(':');
+            String id = rawMsg.substring(0, colon).trim();
+            String msg = rawMsg.substring(colon+1).trim();
+            String name = game.connectedPlayers.get(id).getName();
             if(my - fontMetrics.getHeight() <= sbMargin)  break;
             String x = name + ": ";
             String y = msg;
@@ -472,17 +490,19 @@ public class UI extends JPanel {
             }
         }
         bg.drawImage(background, 0, 0, null);
-        if(chatBack == null) {
-            try {
-                image = ImageIO.read(new File(baseFilesPath + "chatback2.jpg"));
-                Image img = image.getSubimage(0, 0, screenw-gameWidth, screenh);
-                chatBack = toBufferedImage(img);
+        if(isMultiPlayer) {
+            if (chatBack == null) {
+                try {
+                    image = ImageIO.read(new File(baseFilesPath + "chatback2.jpg"));
+                    Image img = image.getSubimage(0, 0, screenw - gameWidth, screenh);
+                    chatBack = toBufferedImage(img);
 
-            } catch (IOException e) {
-                e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+            bg.drawImage(chatBack, gameWidth, 0, null);
         }
-        bg.drawImage(chatBack, gameWidth, 0, null);
 
 
         paintCells();
@@ -557,8 +577,10 @@ public class UI extends JPanel {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-        drawNames();
-        drawGroupChat();
+        if(isMultiPlayer) {
+            drawNames();
+            drawGroupChat();
+        }
         g.drawImage(buffer, 0, 0,  null);
         long end = System.nanoTime();
         iter ++;

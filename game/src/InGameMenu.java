@@ -42,7 +42,7 @@ public class InGameMenu extends JPanel implements ActionListener {
 
         BufferedImage image;
         try {
-            image = ImageIO.read(new File("C://Users//Sina//Desktop//BackGround1.jpg"));
+            image = ImageIO.read(new File("game/static/BackGround1.jpg"));
             bg.drawImage(image, 0, 0, null);
         } catch (IOException e) {
             e.printStackTrace();

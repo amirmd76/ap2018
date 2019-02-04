@@ -10,8 +10,14 @@ public class Server implements Runnable, Serializable {
     private int port;
     private ServerSocket serverSocket;
     private Socket socket;
-    private HashMap<String, Player> connectedPlayers = new HashMap<>();
-    private File chatFile;
+    private HashMap<String, Player> connectedPlayers;
+    private Semaphore semaphore = new Semaphore(0);
+    private ArrayList<String> command;
+    private ArrayList<String> textInputs;
+    private ArrayList<String> privateTextInput;
+    private ArrayList<String> chatRoom;
+    private ArrayList<String> privateChat;
+    private Thread privateChatRoom;
     private Shop shop;
     private boolean run = true;
     private File saveFile = new File("save");
@@ -20,10 +26,15 @@ public class Server implements Runnable, Serializable {
 
 
 
-    public Server(int port) {
+    public Server(int port, Shop shop, HashMap<String, Player> connectedPlayers, ArrayList<String> chatRoom, ArrayList<String> commands, ArrayList<String> privateChat, ArrayList<String> textInputs, ArrayList<String> privateTextInput) {
         this.port = port;
-        this.chatFile = new File("chat.txt");
-        shop = new Shop();
+        this.chatRoom = chatRoom;
+        this.command = commands;
+        this.textInputs = textInputs;
+        this.privateChat = privateChat;
+        this.privateTextInput = privateTextInput;
+        this.shop = shop;
+        this.connectedPlayers = connectedPlayers;
         try {
             serverSocket = new ServerSocket(port);
             this.IP = serverSocket.getInetAddress().getHostAddress();
@@ -32,9 +43,14 @@ public class Server implements Runnable, Serializable {
         }
     }
 
-    public Server(Shop shop) {
+    public Server(Shop shop, HashMap<String, Player> connectedPlayers, ArrayList<String> chatRoom, ArrayList<String> commands, ArrayList<String> privateChat, ArrayList<String> textInputs, ArrayList<String> privateTextInput) {
         this.port = 8050;
-        this.chatFile = new File("chat.txt");
+        this.chatRoom = chatRoom;
+        this.textInputs = textInputs;
+        this.privateTextInput = privateTextInput;
+        this.command = commands;
+        this.privateChat = privateChat;
+        this.connectedPlayers = connectedPlayers;
         this.shop = shop;
         try {
             serverSocket = new ServerSocket(port);
@@ -121,6 +137,7 @@ public class Server implements Runnable, Serializable {
     public void run() {
         String comment = null;
         String ID = null;
+        Iterator<String> iterator = command.iterator();
         synchronized (socket) {
             while (true) {
                 try {
@@ -140,9 +157,42 @@ public class Server implements Runnable, Serializable {
                     e.printStackTrace();
                 }
                 if (run) {
-                    Thread client = new Thread(new ServerHandler(port, socket, shop, IP, chatFile, connectedPlayers, connectedPlayers.get(ID), commands.get(ID)));
+                    Thread client = new Thread(new ServerHandler(port, socket, shop, IP, connectedPlayers, connectedPlayers.get(ID), commands.get(ID), chatRoom));
                     clients.put(ID, client);
                     client.start();
+                }
+                if (iterator.hasNext()){
+                    String command = iterator.next();
+                    switch (command){
+                        case "privateChat":{
+                            semaphore.release();
+                            semaphore.release();
+                            String name = iterator.next();
+                            privateChatRoom = new Thread(new PrivateChatRoom(socket, privateTextInput, run, semaphore, name, privateChat));
+                            privateChatRoom.start();
+                            break;
+                        }
+                        /*case "makeFriend": {
+                            String name = iterator.next();
+                            formatter.format("friendNotification" + "\n");
+                            formatter.flush();
+                            formatter.format(name);
+                            formatter.flush();
+                            if (scanner.nextLine().equals("approved")) {
+                                friends.add(name);
+                            }
+                            break;
+                        }
+                        case "friendNotification":{
+                            notif = "makeFriend";
+                            do { } while (notif.equals("makeFriend"));
+                            if (notif.equals("approved"))
+                                formatter.format("approved" + "\n");
+                            else
+                                formatter.format("declined" + "\n");
+                            formatter.flush();
+                        }*/
+                    }
                 }
                 saveServer();
             }

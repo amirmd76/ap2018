@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class NewGame extends JPanel implements ActionListener {
+public class HostStart extends JPanel implements ActionListener {
     int screenw, screenh;
     private static Image buffer;
     private static Graphics bg;
@@ -15,14 +15,15 @@ public class NewGame extends JPanel implements ActionListener {
     private JTextField field;
     private JTextArea textArea;
     private String nickname = null;
+    private int port;
 
-    public NewGame(int screenw, int screenh) {
+    public HostStart(int screenw, int screenh) {
         super(new GridBagLayout());
         this.screenw = screenw;
         this.screenh = screenh;
         setPreferredSize(new Dimension(screenw, screenh));
     }
-    public NewGame() {
+    public HostStart() {
         super(new GridBagLayout());
         this.screenw = 0;
         this.screenh = 0;
@@ -36,6 +37,8 @@ public class NewGame extends JPanel implements ActionListener {
     public String getNickname() {
         return nickname;
     }
+
+    public int getPort() { return port; }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -56,7 +59,7 @@ public class NewGame extends JPanel implements ActionListener {
         }
         g.drawImage(buffer, 0, 0,  null);
 
-        JLabel label = new JLabel("Enter your nickname");
+        JLabel label = new JLabel("Enter Port Number");
         label.setBounds(90,0,250,100);
         label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
         add(label);
@@ -70,6 +73,7 @@ public class NewGame extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         this.nickname = field.getText();
-        this.action = "NicknameEntered";
+        this.port = Integer.parseInt(nickname);
+        this.action = "PortEntered";
     }
 }

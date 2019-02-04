@@ -134,7 +134,7 @@ public class Menu extends JPanel {
 
         BufferedImage image;
         try {
-            image = ImageIO.read(new File("C://Users//Sina//Desktop//BackGround1.jpg"));
+            image = ImageIO.read(new File("game/static/BackGround1.jpg"));
             Image scaledImage = image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
             bg.drawImage(scaledImage, 0, 0, null);
 
@@ -144,7 +144,7 @@ public class Menu extends JPanel {
 
         JButton button1 = new JButton("New Game");
         button1.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
-        button1.setBounds(300,75,200,50); 
+        button1.setBounds(300,75,200,50);
         button1.setVisible(true);
         button1.setBackground(Color.pink);
         button1.addActionListener(new ActionListener() {
@@ -181,7 +181,7 @@ public class Menu extends JPanel {
         });
         this.add(button3);
 
-        JButton button4 = new JButton("Options");
+        JButton button4 = new JButton("MultiPlayer");
         button4.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
         button4.setBounds(300,375,200,50);
         button4.setVisible(true);
@@ -189,7 +189,7 @@ public class Menu extends JPanel {
         button4.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                action = "Options";
+                action = "MultiPlayer";
             }
         });
         this.add(button4);

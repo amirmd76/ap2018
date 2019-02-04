@@ -1,7 +1,11 @@
+import javafx.print.PageLayout;
+import org.omg.CORBA.ARG_IN;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class Client implements Runnable {
     private String IP;
@@ -9,8 +13,8 @@ public class Client implements Runnable {
     private Socket socket;
     private Player thisPlayer;
     private Semaphore semaphore = new Semaphore(0);
-    private File chatFile = new File("chat.txt");
-    private ArrayList<String> textInputs = new ArrayList<>();
+    private ArrayList<String> textInputs;
+    private ArrayList<String> privateTextInput;
     private ArrayList<String> commands;
     private boolean run = true, runClient = true;
     private Shop shop;
@@ -20,17 +24,25 @@ public class Client implements Runnable {
     private Thread privateChatRoom;
     private String error;
     private String notif;
+    private HashMap<String, Player> connectedPlayers;
+    private ArrayList<String> chatRoom, privateChat;
 
-    public Client(int port, String IP, Player player, ArrayList<String> commands, Shop shop, HashMap<String, Long> boughtItems, HashMap<String, Long> soldItems, String err, String notif) {
+
+    public Client(int port, String IP, Player player, ArrayList<String> commands, Shop shop, HashMap<String, Long> boughtItems, HashMap<String, Long> soldItems, String err, String notif, HashMap<String, Player> connectedPlayers, ArrayList<String> chatRoom, ArrayList<String> privateChat, ArrayList<String> textInputs, ArrayList<String> privateTextInput) {
         this.IP = IP;
         this.port = port;
+        this.privateTextInput = privateTextInput;
         this.thisPlayer = player;
+        this.privateChat = privateChat;
         this.commands = commands;
         this.error = err;
         this.shop = shop;
         this.boughtItems = boughtItems;
+        this.textInputs = textInputs;
         this.soldItems = soldItems;
+        this.connectedPlayers = connectedPlayers;
         this.notif = notif;
+        this.chatRoom = chatRoom;
         try {
             socket = new Socket(IP, port);
         } catch (IOException e) {
@@ -38,11 +50,16 @@ public class Client implements Runnable {
         }
     }
 
-    public Client(String IP, Player player, ArrayList<String> commands, Shop shop, HashMap<String, Long> boughtItems, HashMap<String, Long> soldItems, String err, String notif) {
+    public Client(String IP, Player player, ArrayList<String> commands, Shop shop, HashMap<String, Long> boughtItems, HashMap<String, Long> soldItems, String err, String notif, HashMap<String, Player> connectedPlayers, ArrayList<String> chatRoom, ArrayList<String> privateChat, ArrayList<String> textInputs, ArrayList<String> privateTextInput) {
         this.IP = IP;
         this.port = 8060;
         this.thisPlayer = player;
+        this.privateChat = privateChat;
+        this.privateTextInput = privateTextInput;
+        this.connectedPlayers = connectedPlayers;
+        this.chatRoom = chatRoom;
         this.error = err;
+        this.textInputs = textInputs;
         this.commands = commands;
         this.shop = shop;
         this.boughtItems = boughtItems;
@@ -112,6 +129,18 @@ public class Client implements Runnable {
         }
     }
 
+    public void receiveConnectedPlayers(){
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            connectedPlayers = (HashMap<String, Player>) objectInputStream.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void sendSoldItems(){
         synchronized (socket) {
             try {
@@ -140,8 +169,8 @@ public class Client implements Runnable {
             OutputStream outputStream = socket.getOutputStream();
             Scanner scanner = new Scanner(inputStream);
             Formatter formatter = new Formatter(outputStream);
-            Thread reader = new Thread(new Reader(socket, chatFile, semaphore, run));
-            Thread writer = new Thread(new Writer(socket, chatFile, textInputs, run, semaphore));
+            Thread reader = new Thread(new Reader(socket, chatRoom, semaphore, run));
+            Thread writer = new Thread(new Writer(socket, chatRoom, textInputs, run, semaphore));
             Iterator<String> iterator = commands.iterator();
             sendInitialData();
             if (scanner.nextLine().equals("enter new ID")){
@@ -150,16 +179,26 @@ public class Client implements Runnable {
             }
 
             while (runClient) {
+                sendInitialData();
                 if (iterator.hasNext()) {
                     String command = iterator.next();
                     synchronized (socket) {
                         switch (command) {
                             case "playerData": {
-                                formatter.format("playerData");
+                                formatter.format("playerData" + "\n");
                                 formatter.flush();
                                 run = false;
                                 sendInitialData();
-                                do { } while(!scanner.nextLine().equals("playerReceived"));
+                                do {
+                                    try {
+                                        TimeUnit.MILLISECONDS.sleep(10);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                } while(!scanner.nextLine().equals("playerReceived"));
+                                receiveConnectedPlayers();
+                                formatter.format("received" + "\n");
+                                formatter.flush();
                                 break;
                             }
                             case "chat": {
@@ -174,15 +213,15 @@ public class Client implements Runnable {
                             }
                             case "shop": {
                                 run = false;
-                                formatter.format("shop");
+                                formatter.format("shop" + "\n");
                                 formatter.flush();
                                 receiveShop();
-                                formatter.format("shopReceived");
+                                formatter.format("shopReceived" + "\n");
                                 formatter.flush();
                             }
                             case "sendDeals":{
                                 run = false;
-                                formatter.format("deals");
+                                formatter.format("deals" + "\n");
                                 formatter.flush();
                                 sendBoughtItems();
                                 do { } while(!scanner.nextLine().equals("boughtItemsReceived"));
@@ -194,18 +233,19 @@ public class Client implements Runnable {
                                 String ID = iterator.next();
                             }
                             case "privateChat":{
+
                                 semaphore.release();
                                 semaphore.release();
                                 String name = iterator.next();
                                 formatter.format(name + "\n");
                                 formatter.flush();
-                                privateChatRoom = new Thread(new PrivateChatRoom(socket, textInputs, run, semaphore, name));
+                                privateChatRoom = new Thread(new PrivateChatRoom(socket, privateTextInput, run, semaphore, name, privateChat));
                                 privateChatRoom.start();
                                 break;
                             }
                             case "makeFriend": {
                                 String name = iterator.next();
-                                formatter.format("friendNotification");
+                                formatter.format("friendNotification" + "\n");
                                 formatter.flush();
                                 formatter.format(name);
                                 formatter.flush();
@@ -218,12 +258,11 @@ public class Client implements Runnable {
                                 notif = "makeFriend";
                                 do { } while (notif.equals("makeFriend"));
                                 if (notif.equals("approved"))
-                                    formatter.format("approved");
+                                    formatter.format("approved" + "\n");
                                 else
-                                    formatter.format("declined");
+                                    formatter.format("declined" + "\n");
                                 formatter.flush();
                             }
-
                         }
                     }
                 }
